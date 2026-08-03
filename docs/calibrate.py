@@ -76,12 +76,7 @@ def corpus() -> list[tuple[str, str, str]]:
     """
     samples: list[tuple[str, str, str]] = []
 
-    for relative in (
-        "README.md",
-        "HANDOFF.md",
-        "OVERNIGHT-PROMPT.md",
-        "pyproject.toml",
-    ):
+    for relative in ("README.md", "CHANGELOG.md", "pyproject.toml"):
         path = os.path.join(ROOT, relative)
         if os.path.isfile(path):
             with open(path, encoding="utf-8") as handle:

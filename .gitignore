@@ -13,3 +13,12 @@ htmlcov/
 
 # Held by an unattended build run so two of them cannot edit the tree at once.
 .build-lock
+
+# Working notes for the unattended build sessions. Kept on disk because the
+# scheduled runs read them, untracked because they are 16% of this
+# repository's context cost and none of it is for a user -- which is the
+# recommendation this tool makes about everybody else's repositories.
+HANDOFF.md
+OVERNIGHT-PROMPT.md
+NIGHT-LOG.md
+MORNING-REPORT.md

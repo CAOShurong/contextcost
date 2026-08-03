@@ -127,6 +127,29 @@ private one, and this is the account's sixth project — it is being looked at.
   `contextcost` directory.
 - Do not open issues, post anywhere, or contact anyone.
 
+## 7b. Leave a trail the owner can actually read
+
+Your report at the end of a run goes into a session the owner will never open.
+As far as they are concerned, **a run that left no file behind did not happen.**
+
+So before you finish, append your report to `NIGHT-LOG.md` in the repo root —
+create it if absent — then commit and push it. Newest entry at the bottom, one
+section per run, in this shape, and keep it short:
+
+```markdown
+## Run N — 04:00
+
+**Did:** one line per step completed.
+**Ran:** the command, and what it actually printed. Quote the pytest line.
+**Got wrong:** anything, and how you found out. Write this even when it is
+embarrassing -- especially then.
+**Next run should:** the single most useful thing to pick up.
+```
+
+If you found a live lock and exited without working, still append a one-line
+entry saying exactly that. A gap in this log must mean "that run never
+started", never "that run did nothing and did not say so".
+
 ## 8. Finish cleanly
 
 Delete `.build-lock`. Make sure the working tree is committed. Then report, in

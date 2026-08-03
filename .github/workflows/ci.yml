@@ -111,10 +111,25 @@ jobs:
           assert run.returncode == 0, f"second run still found something: {run.stdout[:400]}"
           again = json.loads(run.stdout)
           measured_after = again["walk"]["tokens"]
-          assert measured_after == after, (
-              f"reported {after} after exclusion, independent run says {measured_after}"
+
+          # Writing the .gitignore added a file the first measurement never
+          # saw, so the second total is higher by exactly what that file
+          # costs. Asserting the exact relationship rather than allowing a
+          # tolerance: the first version of this job asserted plain equality
+          # and failed by 11 tokens, and 11 tokens turned out to be precisely
+          # the size of the .gitignore it had just written. A tolerance would
+          # have hidden that instead of explaining it.
+          from contextcost.estimate import estimate_tokens
+
+          with open("demo/.gitignore", encoding="utf-8") as handle:
+              overhead = estimate_tokens(handle.read()).tokens
+
+          assert measured_after == after + overhead, (
+              f"reported {after} after exclusion; independent run says "
+              f"{measured_after}, and the new .gitignore accounts for only {overhead}"
           )
-          print(f"verified: {before:,} -> {after:,} tokens, {saved:,} saved")
+          print(f"verified: {before:,} -> {after:,} tokens, {saved:,} saved "
+                f"(+{overhead} for the .gitignore that was written)")
           PY
 
   readme:

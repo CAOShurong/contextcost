@@ -165,6 +165,15 @@ when it was not, so this works as a CI check:
   run: pipx run contextcost --quiet
 ```
 
+**That exit code will bite you under `set -e`.** "Found something" is not an
+error, but `bash -e` cannot tell the difference and will abort your script on
+it. This tool's own CI failed on exactly that the first time it ran. When you
+want the output rather than the verdict, say so:
+
+```bash
+contextcost --json > cost.json || true
+```
+
 ## As a library
 
 ```python

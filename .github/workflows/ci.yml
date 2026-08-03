@@ -80,9 +80,14 @@ jobs:
 
       - name: The reported saving survives being checked
         run: |
-          contextcost demo --json > result.json
+          # `|| true` is load-bearing. contextcost exits 1 when it finds
+          # something, which is the point of the exit code -- and under
+          # `bash -e`, which is what GitHub runs, that aborts the step. The
+          # first version of this job failed here, which is a fair thing for
+          # the tool's own CI to have discovered about the tool.
+          contextcost demo --json > result.json || true
           python - <<'PY'
-          import json, subprocess, sys
+          import json, subprocess
 
           report = json.load(open("result.json"))["reduction"]
           before, after, saved = report["before"], report["after"], report["saved"]
@@ -96,11 +101,15 @@ jobs:
           # measure again, independently of the code path that produced them.
           with open("demo/.gitignore", "w") as handle:
               handle.write("\n".join(report["patterns"]) + "\n")
-          again = json.loads(
-              subprocess.run(
-                  ["contextcost", "demo", "--json"], capture_output=True, text=True, check=True
-              ).stdout
+          # Not check=True: this run should exit 0 because the patterns it is
+          # verifying have removed everything there was to find. Asserting
+          # that explicitly makes a non-zero code a readable failure rather
+          # than a CalledProcessError.
+          run = subprocess.run(
+              ["contextcost", "demo", "--json"], capture_output=True, text=True
           )
+          assert run.returncode == 0, f"second run still found something: {run.stdout[:400]}"
+          again = json.loads(run.stdout)
           measured_after = again["walk"]["tokens"]
           assert measured_after == after, (
               f"reported {after} after exclusion, independent run says {measured_after}"

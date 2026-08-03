@@ -64,6 +64,21 @@ HANDOFF.md:
   An approximation presented as exact is the thing this whole portfolio argues
   against.
 
+## 3b. Keep shell commands boring
+
+Nobody is awake to approve anything, and a command that stalls waiting for a
+click wastes the entire run. Permission matching works on command prefixes, so
+an elaborate one-liner is many chances to hit something unrecognised: the
+preflight for this very chain stalled on
+
+    cd ... && python -m pytest -q 2>&1 | tee /tmp/out.txt; echo ---; grep -c ...
+
+which is four commands and a pipe where one command would have done. Run
+`python -m pytest -q` on its own and read what it printed. Split compound
+commands into separate calls. Avoid `tee`, `xargs`, `awk`, `sed` and
+process substitution unless there is no alternative — you almost always want
+plain output you can read directly.
+
 ## 4. Run what you write
 
 `python -m pytest -q` from the repo root. No `PYTHONPATH`, nothing installed —

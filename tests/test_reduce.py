@@ -63,14 +63,18 @@ def test_an_overreaching_directory_pattern_is_caught_and_narrowed(tmp_path):
     )
     before = walk_repository(root)
     proposed = propose_patterns(before, classify(before))
-    assert "/docs/" in proposed, "the naive proposal really does take the whole directory"
+    assert "/docs/" in proposed, (
+        "the naive proposal really does take the whole directory"
+    )
 
     result = reduce_repository(root)
     assert result.narrowed_from == proposed
     assert result.patterns == ["/docs/app.min.js"]
     assert [c.path for c in result.excluded] == ["docs/app.min.js"]
 
-    survivors = {c.path for c in walk_repository(root, extra_ignore=result.patterns).text_files}
+    survivors = {
+        c.path for c in walk_repository(root, extra_ignore=result.patterns).text_files
+    }
     assert "docs/guide/writing.md" in survivors
 
 
@@ -108,7 +112,11 @@ def test_a_directory_of_pure_waste_is_proposed_whole(tmp_path):
     result = reduce_repository(root)
     assert result.patterns == ["/vendor/"]
     assert not result.narrowed_from
-    assert {c.path for c in result.excluded} == {"vendor/one.py", "vendor/two.py", "vendor/deep/three.py"}
+    assert {c.path for c in result.excluded} == {
+        "vendor/one.py",
+        "vendor/two.py",
+        "vendor/deep/three.py",
+    }
 
 
 def test_possible_findings_are_deferred_rather_than_decided(tmp_path):

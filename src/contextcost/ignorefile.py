@@ -39,13 +39,13 @@ class Pattern:
     """One line of an ignore file, compiled."""
 
     source: str
-    regex: "re.Pattern[str]"
+    regex: re.Pattern[str]
     negated: bool
     directory_only: bool
     #: The same pattern without the "or anything beneath it" tail. Needed only
     #: for directory-only patterns, to tell "this *is* the directory" from
     #: "this is a file inside it".
-    exact: "re.Pattern[str] | None" = None
+    exact: re.Pattern[str] | None = None
 
     def matches(self, relative: str, is_dir: bool) -> bool:
         if self.regex.match(relative) is None:
@@ -174,7 +174,7 @@ class IgnoreRules:
 
     patterns: list[Pattern] = field(default_factory=list)
 
-    def extend(self, more: list[Pattern]) -> "IgnoreRules":
+    def extend(self, more: list[Pattern]) -> IgnoreRules:
         return IgnoreRules(self.patterns + more)
 
     def ignored(self, relative: str, *, is_dir: bool = False) -> bool:

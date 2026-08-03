@@ -10,7 +10,12 @@ code happens to do, they are asserting what git itself does.
 
 from __future__ import annotations
 
-from contextcost.ignorefile import ALWAYS_SKIP, IgnoreRules, load_ignore_rules, parse_ignore
+from contextcost.ignorefile import (
+    ALWAYS_SKIP,
+    IgnoreRules,
+    load_ignore_rules,
+    parse_ignore,
+)
 
 
 def rules(text: str, prefix: str = "") -> IgnoreRules:

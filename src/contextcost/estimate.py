@@ -106,9 +106,7 @@ def looks_binary(sample: bytes) -> bool:
     if not sample:
         return False
     printable = sum(
-        1
-        for byte in sample
-        if byte in (9, 10, 13) or 32 <= byte < 127 or byte >= 128
+        1 for byte in sample if byte in (9, 10, 13) or 32 <= byte < 127 or byte >= 128
     )
     return printable / len(sample) < 0.85
 

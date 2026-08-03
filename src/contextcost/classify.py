@@ -195,7 +195,16 @@ LARGE_DATA = Rule(
 #: Ordered strongest-evidence first. :func:`classify` takes the first match,
 #: so a minified file inside `vendor/` is reported as minified -- the more
 #: specific fact about it.
-RULES = (LOCKFILE, GENERATED, MINIFIED, DENSE, VENDORED, BUILD_OUTPUT, SNAPSHOT, LARGE_DATA)
+RULES = (
+    LOCKFILE,
+    GENERATED,
+    MINIFIED,
+    DENSE,
+    VENDORED,
+    BUILD_OUTPUT,
+    SNAPSHOT,
+    LARGE_DATA,
+)
 
 _CONFIDENCE_ORDER = {"certain": 0, "likely": 1, "possible": 2}
 
@@ -227,20 +236,57 @@ _LOCKFILES = frozenset(
 
 #: Directory names that mean "this came from somewhere else".
 _VENDOR_DIRS = frozenset(
-    {"vendor", "vendored", "third_party", "thirdparty", "node_modules", "bower_components", "godeps", "external"}
+    {
+        "vendor",
+        "vendored",
+        "third_party",
+        "thirdparty",
+        "node_modules",
+        "bower_components",
+        "godeps",
+        "external",
+    }
 )
 
 #: Directory names that mean "this was produced from the source beside it".
 #: `build` and `out` are also plausible source directory names, which is why
 #: this rule is `likely` rather than `certain`.
 _BUILD_DIRS = frozenset(
-    {"dist", "build", "target", "out", ".next", ".nuxt", "_build", "obj", "bin", "coverage", "htmlcov", "site-packages"}
+    {
+        "dist",
+        "build",
+        "target",
+        "out",
+        ".next",
+        ".nuxt",
+        "_build",
+        "obj",
+        "bin",
+        "coverage",
+        "htmlcov",
+        "site-packages",
+    }
 )
 
-_SNAPSHOT_DIRS = frozenset({"__snapshots__", "snapshots", "cassettes", "__recordings__"})
+_SNAPSHOT_DIRS = frozenset(
+    {"__snapshots__", "snapshots", "cassettes", "__recordings__"}
+)
 
 _DATA_SUFFIXES = frozenset(
-    {".csv", ".tsv", ".json", ".jsonl", ".ndjson", ".parquet", ".sql", ".xml", ".yaml", ".yml", ".txt", ".log"}
+    {
+        ".csv",
+        ".tsv",
+        ".json",
+        ".jsonl",
+        ".ndjson",
+        ".parquet",
+        ".sql",
+        ".xml",
+        ".yaml",
+        ".yml",
+        ".txt",
+        ".log",
+    }
 )
 
 #: Banners real generators emit, as word-boundary patterns.
@@ -324,14 +370,18 @@ def _match(root: str, cost: FileCost) -> Finding | None:
     segments = _segments(cost.path)
 
     if name in _LOCKFILES:
-        return Finding(LOCKFILE, cost.path, cost.tokens, f"{name} is written by a package manager")
+        return Finding(
+            LOCKFILE, cost.path, cost.tokens, f"{name} is written by a package manager"
+        )
 
     banner = _generator_banner(root, cost)
     if banner is not None:
         return Finding(GENERATED, cost.path, cost.tokens, banner)
 
     if _MINIFIED_NAME.search(name):
-        return Finding(MINIFIED, cost.path, cost.tokens, "named as minified or bundled output")
+        return Finding(
+            MINIFIED, cost.path, cost.tokens, "named as minified or bundled output"
+        )
     if cost.kind == "dense":
         # Deliberately a separate rule from `minified`, at lower confidence.
         # Both fire on the same measurement, but "this is minified output"
@@ -340,19 +390,32 @@ def _match(root: str, cost: FileCost) -> Finding | None:
         # reason for a true conclusion is the failure this module is built to
         # avoid. Found by running against a real repository, where two
         # manifests were confidently described as minified JavaScript.
-        return Finding(DENSE, cost.path, cost.tokens, "content is long unbroken runs of characters")
+        return Finding(
+            DENSE, cost.path, cost.tokens, "content is long unbroken runs of characters"
+        )
 
     for segment in segments:
         if segment in _VENDOR_DIRS:
-            return Finding(VENDORED, cost.path, cost.tokens, f"inside a directory named {segment}/")
+            return Finding(
+                VENDORED, cost.path, cost.tokens, f"inside a directory named {segment}/"
+            )
     for segment in segments:
         if segment in _SNAPSHOT_DIRS:
-            return Finding(SNAPSHOT, cost.path, cost.tokens, f"inside a directory named {segment}/")
+            return Finding(
+                SNAPSHOT, cost.path, cost.tokens, f"inside a directory named {segment}/"
+            )
     if name.endswith(".snap") or name.endswith(".ambr"):
-        return Finding(SNAPSHOT, cost.path, cost.tokens, "a test runner's snapshot file")
+        return Finding(
+            SNAPSHOT, cost.path, cost.tokens, "a test runner's snapshot file"
+        )
     for segment in segments:
         if segment in _BUILD_DIRS:
-            return Finding(BUILD_OUTPUT, cost.path, cost.tokens, f"inside a directory named {segment}/")
+            return Finding(
+                BUILD_OUTPUT,
+                cost.path,
+                cost.tokens,
+                f"inside a directory named {segment}/",
+            )
 
     if cost.tokens >= LARGE_DATA_TOKENS and cost.extension in _DATA_SUFFIXES:
         share_note = f"{cost.tokens:,} tokens in a single {cost.extension} file"

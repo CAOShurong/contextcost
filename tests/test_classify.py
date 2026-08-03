@@ -47,12 +47,22 @@ FILLER = "The quick brown fox jumps over the lazy dog. " * 20
 
 
 def test_a_lockfile_is_recognised_by_name(tmp_path):
-    assert found(tmp_path, {"package-lock.json": FILLER})["package-lock.json"] == "lockfile"
+    assert (
+        found(tmp_path, {"package-lock.json": FILLER})["package-lock.json"]
+        == "lockfile"
+    )
 
 
 def test_every_known_lockfile_name_is_matched(tmp_path):
-    names = ["yarn.lock", "poetry.lock", "Cargo.lock", "go.sum", "uv.lock", "Gemfile.lock"]
-    result = found(tmp_path, {name: FILLER for name in names})
+    names = [
+        "yarn.lock",
+        "poetry.lock",
+        "Cargo.lock",
+        "go.sum",
+        "uv.lock",
+        "Gemfile.lock",
+    ]
+    result = found(tmp_path, dict.fromkeys(names, FILLER))
     assert set(result) == set(names)
     assert set(result.values()) == {"lockfile"}
 
@@ -68,8 +78,13 @@ def test_prose_containing_the_word_generated_is_not_treated_as_generated(tmp_pat
     a false positive at `certain` confidence, which is the worst thing this
     module can produce. Word boundaries and no bare "generated" now.
     """
-    text = "# Third party notices\n\nThis project reviews chatgpt-generated files.\n" + FILLER
-    assert "THIRD_PARTY_NOTICES.md" not in found(tmp_path, {"THIRD_PARTY_NOTICES.md": text})
+    text = (
+        "# Third party notices\n\nThis project reviews chatgpt-generated files.\n"
+        + FILLER
+    )
+    assert "THIRD_PARTY_NOTICES.md" not in found(
+        tmp_path, {"THIRD_PARTY_NOTICES.md": text}
+    )
 
 
 def test_a_banner_far_below_the_top_is_not_a_banner(tmp_path):
@@ -78,7 +93,9 @@ def test_a_banner_far_below_the_top_is_not_a_banner(tmp_path):
     prose, and searching the whole header for it was how the false positive
     above got its chance.
     """
-    text = "\n".join(f"Line {n} of ordinary documentation prose here." for n in range(30))
+    text = "\n".join(
+        f"Line {n} of ordinary documentation prose here." for n in range(30)
+    )
     text += "\nPlease do not edit the section above by hand.\n" + FILLER
     assert "CONTRIBUTING.md" not in found(tmp_path, {"CONTRIBUTING.md": text})
 
@@ -177,7 +194,15 @@ def test_findings_are_ranked_by_cost_not_by_category(tmp_path):
 
 def test_grouping_puts_the_most_confident_rules_first(tmp_path):
     grouped = by_rule(
-        classify(build(tmp_path, {"data/rows.csv": "n,v\n" + "1,alpha beta gamma\n" * 3000, "go.sum": FILLER}))
+        classify(
+            build(
+                tmp_path,
+                {
+                    "data/rows.csv": "n,v\n" + "1,alpha beta gamma\n" * 3000,
+                    "go.sum": FILLER,
+                },
+            )
+        )
     )
     assert list(grouped) == ["lockfile", "large-data"]
 

@@ -99,16 +99,21 @@ class Reduction:
             "deferred": [f.as_dict() for f in self.deferred],
         }
 
-    def gitignore_block(self) -> str:
-        """The proposal, as text to append to a `.gitignore`."""
-        if not self.patterns:
+    def gitignore_block(self, patterns: list[str] | None = None) -> str:
+        """The proposal, as text to append to a `.gitignore`.
+
+        ``patterns`` narrows the block to a subset, which is how a second run
+        appends only what is new instead of repeating itself.
+        """
+        chosen = self.patterns if patterns is None else patterns
+        if not chosen:
             return ""
         lines = [
             "# Added by contextcost: files an AI coding agent pays to read",
             f"# and does not need. Measured saving: {self.saved:,} of "
             f"{self.before:,} tokens ({self.share:.0%}).",
         ]
-        lines.extend(self.patterns)
+        lines.extend(chosen)
         return "\n".join(lines) + "\n"
 
 
@@ -223,8 +228,12 @@ def reduce_repository(
         # report says this happened; correcting it silently would leave the
         # user trusting a pattern set that had already been wrong once.
         reduction.narrowed_from = patterns
-        patterns = sorted(_anchored(p) for p in intended if not _GLOB_METACHARACTERS.search(p))
-        after = walk_repository(root, use_gitignore=use_gitignore, extra_ignore=patterns)
+        patterns = sorted(
+            _anchored(p) for p in intended if not _GLOB_METACHARACTERS.search(p)
+        )
+        after = walk_repository(
+            root, use_gitignore=use_gitignore, extra_ignore=patterns
+        )
         removed = set(before_paths) - set(_paths(after))
 
     reduction.patterns = patterns

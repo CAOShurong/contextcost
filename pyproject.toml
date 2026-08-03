@@ -81,3 +81,6 @@ select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
 [tool.ruff.lint.per-file-ignores]
 # Tests state gitignore cases as literal tables, and the width is the point.
 "tests/*" = ["E501"]
+# The docs builder holds the example repository as literal file contents.
+# Wrapping a fixture makes it harder to see what the fixture actually is.
+"docs/*" = ["E501"]

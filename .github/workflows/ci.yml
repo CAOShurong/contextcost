@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }} · Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Both ends of the supported range on the two platforms most likely to
+        # disagree, plus the versions in between on Linux only. The Windows
+        # entries are not decoration: this tool reads paths, encodings and
+        # line endings, which is exactly where the two diverge.
+        include:
+          - { os: ubuntu-latest, python: "3.9" }
+          - { os: ubuntu-latest, python: "3.10" }
+          - { os: ubuntu-latest, python: "3.11" }
+          - { os: ubuntu-latest, python: "3.12" }
+          - { os: ubuntu-latest, python: "3.13" }
+          - { os: windows-latest, python: "3.9" }
+          - { os: windows-latest, python: "3.13" }
+          - { os: macos-latest, python: "3.13" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      # Only pytest. The package itself has no dependencies, and installing it
+      # would hide an accidental one.
+      - run: python -m pip install --upgrade pip pytest
+      - run: python -m pytest -q
+        env:
+          PYTHONPATH: src
+
+  end-to-end:
+    name: Run against a real repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install .
+
+      # A unit test can only prove the pieces agree with each other. This
+      # checks the assertion the README actually makes, against a repository
+      # assembled on disk: that the saving is a real difference between two
+      # walks and that nothing was removed which was not proposed.
+      - name: Build a repository with the usual ballast
+        run: |
+          mkdir -p demo/src demo/vendor/legacy
+          printf 'export const app = 1;\n%.0s' {1..400} > demo/src/app.js
+          printf 'var helper = {};\n%.0s' {1..400} > demo/vendor/legacy/helpers.js
+          python - <<'PY'
+          entries = ",".join(
+              f'"node_modules/pkg{n}":{{"version":"1.0.{n}"}}' for n in range(400)
+          )
+          open("demo/package-lock.json", "w").write(
+              '{"lockfileVersion":3,"packages":{' + entries + "}}\n"
+          )
+          PY
+
+      - name: The exit code reports that something was found
+        run: |
+          set +e
+          contextcost demo --quiet
+          code=$?
+          set -e
+          test "$code" -eq 1 || { echo "expected exit 1, got $code"; exit 1; }
+
+      - name: The reported saving survives being checked
+        run: |
+          contextcost demo --json > result.json
+          python - <<'PY'
+          import json, subprocess, sys
+
+          report = json.load(open("result.json"))["reduction"]
+          before, after, saved = report["before"], report["after"], report["saved"]
+
+          assert report["measured"] is True, report
+          assert saved == before - after, (saved, before, after)
+          assert saved > 0, "the fixture is full of lockfile; something must be found"
+          assert "/package-lock.json" in report["patterns"], report["patterns"]
+
+          # The claim the whole tool rests on: apply the patterns for real and
+          # measure again, independently of the code path that produced them.
+          with open("demo/.gitignore", "w") as handle:
+              handle.write("\n".join(report["patterns"]) + "\n")
+          again = json.loads(
+              subprocess.run(
+                  ["contextcost", "demo", "--json"], capture_output=True, text=True, check=True
+              ).stdout
+          )
+          measured_after = again["walk"]["tokens"]
+          assert measured_after == after, (
+              f"reported {after} after exclusion, independent run says {measured_after}"
+          )
+          print(f"verified: {before:,} -> {after:,} tokens, {saved:,} saved")
+          PY
+
+  readme:
+    name: README figures are current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip pillow
+      # Fails if a number in the README no longer matches what the code
+      # produces. A stale figure is the failure this project argues against.
+      - run: python docs/build_docs.py --check
+
+  lint:
+    name: Lint and format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip ruff
+      - run: ruff check src tests docs
+      - run: ruff format --check src tests docs
+
+  build:
+    name: Package builds and is publishable
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip build twine
+      - run: python -m build
+      - run: python -m twine check --strict dist/*

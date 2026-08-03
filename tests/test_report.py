@@ -10,6 +10,7 @@ still visibly undecided by the time it reaches a human.
 
 import io
 
+from contextcost.estimate import ERROR_BOUND
 from contextcost.reduce import reduce_repository
 from contextcost.report import render, supports_unicode
 from contextcost.walk import walk_repository
@@ -40,7 +41,7 @@ def test_the_error_bound_is_printed_beside_the_total(tmp_path):
     bound once, it gets quoted without one forever."""
     text = report_for(build(tmp_path, {"src/app.py": SOURCE}))
     assert "tokens to read this repository" in text
-    assert "12% estimated, no tokenizer" in text
+    assert f"{ERROR_BOUND:.0%} estimated, no tokenizer" in text
 
 
 def test_the_saving_is_called_measured_and_not_estimated(tmp_path):
@@ -107,7 +108,7 @@ def test_the_ascii_fallback_emits_nothing_outside_ascii(tmp_path):
         walk_repository(root), reduce_repository(root), colour=False, unicode_ok=False
     )
     text.encode("ascii")  # raises if anything slipped through
-    assert "+/-12%" in text
+    assert f"+/-{ERROR_BOUND:.0%}" in text
     assert "->" in text
     assert "#" in text
 

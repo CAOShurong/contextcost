@@ -73,10 +73,38 @@ know where its numbers stop.
 **It does not use a real tokenizer.** An exact count needs `tiktoken` — a
 compiled dependency with a wheel per platform. A tool whose pitch is "find out
 what your repo costs in ten seconds" cannot open with a build toolchain. So it
-approximates by character class (prose, code, and dense machine-written
-content compress very differently) and **prints its error bound next to every
-total**. A number presented as exact when it is not gets quoted in a decision;
-a number presented as approximate gets checked.
+approximates by character class and **prints its error bound next to every
+total**.
+
+That bound is measured, not asserted. `docs/calibrate.py` encodes a corpus with
+`cl100k_base` and compares:
+
+| | error vs. a real tokenizer |
+| --- | ---: |
+| median file | 2.6% |
+| 95th percentile | 10.0% |
+| whole corpus (what a repository total looks like) | 7.6% |
+
+The bound the tool actually prints is **±12%**: the measured 95th percentile
+plus 20% headroom. The corpus is this repository's own files, so every commit
+changes it slightly, and a bound sitting exactly on the measurement would turn
+ordinary editing into a red build — where the tempting fix is to widen the
+bound, which is how a number stops meaning anything.
+
+Two caveats that belong here rather than in a footnote. **It is one
+tokenizer** — Anthropic and most others do not publish theirs, so this is a
+proxy, and "byte-pair encoders land close to each other" is doing real work in
+that sentence. And **the corpus is this repository's own files** plus synthetic
+dense samples; it is real code and real prose, but it is not yours.
+
+For most of this project's life that bound read `±12%`, and it had been chosen
+rather than measured — the comment beside it cited a calibration script that
+did not exist. When the script was finally written, the true figure was more
+than four times worse, and fixing the ratios it exposed (source code is 4.14
+characters per token, not the 3.15 that had been reasoned out; dense content is
+bimodal and no single ratio fits it) is what produced the table above. That is
+recorded in `estimate.py` rather than quietly corrected, because a tool that
+argues against unverified numbers should say when it shipped one.
 
 **It will not decide the ambiguous cases for you.** Findings carry a
 confidence: `certain` (the file says what it is, or its name is reserved by
@@ -126,20 +154,20 @@ Nobody would call it bloated.
 
 ![Where the context budget goes](breakdown.png)
 
-**50,102 tokens** to read 16 text files
+**37,603 tokens** to read 16 text files
 (estimated, ±12% — see below for why there is no tokenizer).
 
 | file | tokens | rule | confidence |
 | --- | ---: | --- | --- |
-| `package-lock.json` | 9,940 | lockfile | certain |
-| `dist/bundle.min.js` | 4,708 | minified | certain |
-| `vendor/legacy/widget.js` | 1,371 | vendored | likely |
-| `src/generated/schema.js` | 1,215 | generated | certain |
-| `tests/__snapshots__/app.test.js.snap` | 1,117 | snapshot | likely |
+| `package-lock.json` | 6,764 | lockfile | certain |
+| `dist/bundle.min.js` | 3,582 | minified | certain |
+| `vendor/legacy/widget.js` | 1,043 | vendored | likely |
+| `src/generated/schema.js` | 924 | generated | certain |
+| `tests/__snapshots__/app.test.js.snap` | 850 | snapshot | likely |
 
 ![What the proposal actually saves](saving.png)
 
-Excluding those leaves **30,894 tokens — a 38%
+Excluding those leaves **23,788 tokens — a 37%
 reduction**, and that number is the difference between two walks of the
 repository, not a sum of what was dropped.
 

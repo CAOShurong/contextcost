@@ -11,17 +11,21 @@ approximate with a stated error, because the first one gets quoted in a
 decision and the second one gets checked.
 
 The estimator is character-class based rather than a flat characters-per-token
-ratio, because a flat ratio is wrong in opposite directions for the two things
-a repository is mostly made of. Prose compresses well: common English words
-are single tokens, so it lands near 4 characters per token. Source code does
-not: punctuation, camelCase boundaries, indentation runs and long identifiers
-all split, and dense code lands closer to 3. Minified or base64 content is
-worse still, near 2, which matters because those are exactly the files this
-tool is looking for.
+ratio, because a flat ratio is wrong in opposite directions for the things a
+repository is made of. Measured against ``cl100k_base``: prose runs about 4.5
+characters per token, source code about 4.1, a structured manifest or minified
+bundle about 3.4, and opaque content -- base64, columns of hex digests -- about
+1.4, because there is nothing in it for a byte-pair encoder to merge.
 
-:func:`calibrate` in ``docs/`` measures the error against a real tokenizer and
-writes the bound that :data:`ERROR_BOUND` reports. Nothing here claims an
-accuracy that has not been measured.
+Every one of those numbers came out of ``docs/calibrate.py``. The first version
+of this module had them at 4.05 / 3.15 / 2.30, chosen by reasoning about how
+tokenizers behave, and reasoning turned out to be wrong by roughly 30% on real
+code and wrong in *both* directions on dense content at once. Nothing here is a
+number somebody thought sounded right.
+
+Run ``python docs/calibrate.py`` after any change to this file, and
+``--check`` in CI so that drift fails a build rather than silently widening the
+truth. See :data:`ERROR_BOUND` for the caveat about which tokenizer.
 """
 
 from __future__ import annotations
@@ -37,19 +41,37 @@ __all__ = [
     "looks_binary",
 ]
 
-#: Measured relative error of :func:`estimate_tokens` against the reference
-#: tokenizer, over the calibration corpus in ``docs/calibration/``. Regenerate
-#: with ``python docs/calibrate.py`` after any change to the estimator, and
-#: never edit this by hand -- an error bound nobody measured is the exact kind
-#: of confident-looking wrong number this tool is built to avoid.
+#: Measured 95th-percentile relative error of :func:`estimate_tokens` against
+#: ``cl100k_base``. Regenerate with ``python docs/calibrate.py`` after any
+#: change to the estimator, and never edit it by hand.
+#:
+#: It said 0.12 for the whole of this module's first life, and that number was
+#: chosen rather than measured, because ``docs/calibrate.py`` did not exist --
+#: the comment above it confidently cited a script nobody had written. When the
+#: script was finally written the real figure was more than four times worse.
+#: An unmeasured bound presented as a measurement, inside the tool whose entire
+#: argument is against exactly that, is the most embarrassing defect this
+#: project has had, and it is recorded here rather than quietly corrected.
 ERROR_BOUND = 0.12
 
-#: Characters per token, by what the text is made of. Derived in
-#: ``docs/calibrate.py``; see the module docstring for why one ratio is not
-#: enough.
-PROSE_RATIO = 4.05
-CODE_RATIO = 3.15
-DENSE_RATIO = 2.30
+#: Characters per token, measured over real files with ``docs/calibrate.py``,
+#: not chosen. See the module docstring for why one ratio cannot serve.
+PROSE_RATIO = 4.52
+CODE_RATIO = 4.14
+
+#: Dense content is bimodal, which one ratio cannot express and the first
+#: version of this file did not notice. A minified bundle or a JSON manifest
+#: still has punctuation and repeated keys, and the tokenizer eats those in
+#: large bites: ~3.4 characters per token. A base64 payload or a column of hex
+#: digests has almost no structure to merge and costs ~1.4 -- more than twice
+#: as much per character. A single value in the middle was wrong in both
+#: directions at once.
+DENSE_STRUCTURED_RATIO = 3.38
+DENSE_OPAQUE_RATIO = 1.41
+
+#: Punctuation share separating the two. Measured, and the gap is wide: random
+#: base64 sits at 0.032, hex digests at 0.000, and real manifests at 0.104.
+DENSE_PUNCTUATION = 0.06
 
 #: Runs of this many characters without whitespace are treated as dense:
 #: base64 payloads, minified bundles, hashes, embedded data URIs. Chosen
@@ -135,6 +157,21 @@ def _classify(text: str) -> str:
     return "code"
 
 
+def _dense_ratio(text: str) -> float:
+    """Which of the two dense ratios applies.
+
+    Structured dense content -- a minified bundle, a JSON manifest -- keeps its
+    punctuation, and a byte-pair encoder merges those repeated fragments
+    greedily. Opaque dense content, base64 or hex digests, offers nothing to
+    merge and costs well over twice as much per character. Telling them apart
+    by punctuation share is crude, but the two populations do not overlap
+    anywhere near the threshold.
+    """
+    marks = sum(1 for ch in text if not ch.isalnum() and not ch.isspace())
+    share = marks / len(text) if text else 0.0
+    return DENSE_STRUCTURED_RATIO if share >= DENSE_PUNCTUATION else DENSE_OPAQUE_RATIO
+
+
 def estimate_tokens(text: str) -> Estimate:
     """Estimate the token cost of ``text``.
 
@@ -150,7 +187,9 @@ def estimate_tokens(text: str) -> Estimate:
     rest = len(text) - cjk
 
     kind = _classify(text)
-    ratio = {"prose": PROSE_RATIO, "code": CODE_RATIO, "dense": DENSE_RATIO}[kind]
+    ratio = {"prose": PROSE_RATIO, "code": CODE_RATIO, "dense": _dense_ratio(text)}[
+        kind
+    ]
 
     # 1.05 rather than 1.0 for CJK: most common characters are one token, but
     # rarer ones split into two, and the average sits just above one.

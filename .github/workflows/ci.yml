@@ -145,6 +145,20 @@ jobs:
       # produces. A stale figure is the failure this project argues against.
       - run: python docs/build_docs.py --check
 
+  calibration:
+    name: The error bound still holds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip tiktoken
+      # Fails if the estimator has drifted past the bound it advertises.
+      # ERROR_BOUND was an unmeasured guess once, and it was wrong by a factor
+      # of four; this is what stops that from being possible a second time.
+      - run: python docs/calibrate.py --check
+
   lint:
     name: Lint and format
     runs-on: ubuntu-latest

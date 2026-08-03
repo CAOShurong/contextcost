@@ -24,9 +24,60 @@ loading a repo. They are the first user.
 
 ## Status
 
-Nothing built yet beyond this file. The previous session chose the name,
-verified the prior art, verified `contextcost` is free on PyPI, and set a
-scheduled task to resume.
+`estimate.py`, `ignorefile.py` and `walk.py` are written, tested and committed.
+20 tests pass. The repository is a git repo with one commit and **no remote
+yet**. See the progress log at the bottom for what each step actually did.
+
+## Operating facts for an unattended run
+
+Verified on 2026-08-04 00:30, so none of this needs rediscovering:
+
+- **Writing files needs no approval.** A previous unattended run wrote files
+  successfully. Do not hesitate on that account.
+- **`python -m pytest -q` works from the repo root**, with no `PYTHONPATH` and
+  nothing installed — `tests/conftest.py` puts `src/` on the path. If you see
+  `ModuleNotFoundError: contextcost`, that file has been deleted; restore it.
+- **`gh` is installed but not on `PATH` in bash.** Use
+  `export PATH="/c/Program Files/GitHub CLI:$PATH"` first. It is authenticated
+  and `gh api user` returns `CAOShurong`. (`gh auth status` prints the stale
+  pre-rename name `TeresaCSR` — ignore that, the token is correct.)
+- **`git push` works non-interactively**; credentials are cached. Verified with
+  `GIT_TERMINAL_PROMPT=0 git ls-remote`.
+- **Commit identity is already correct globally.** Do not pass `-c user.email`.
+
+### What you are authorised to do without asking
+
+Build, test, commit, `git push`. The remote already exists and is already
+wired up — https://github.com/CAOShurong/contextcost, pushed and verified on
+2026-08-04 00:35. It was deliberately created **private**, because publishing a
+half-built repository is worse than not publishing one.
+
+Flipping it public is the *last* step of the whole project, and only once all
+three of these hold:
+
+- the test suite is green,
+- `README.md` exists with generated figures,
+- `.github/workflows/ci.yml` exists.
+
+```bash
+export PATH="/c/Program Files/GitHub CLI:$PATH"
+gh repo edit CAOShurong/contextcost --visibility public --accept-visibility-change-consequences
+```
+
+That flag is mandatory on gh 2.97; the command fails without it. The owner is
+asleep and has explicitly delegated this.
+
+### What you must NOT do
+
+- **Do not tag a release, and do not touch PyPI.** A brand-new package needs a
+  *pending* trusted publisher registered by hand on pypi.org first, which needs
+  the owner's browser session. Tagging first makes the release fail after
+  everything else has passed. Leave it; the last step is to write the reminder,
+  not to attempt it.
+- **Do not rewrite a module that already exists** to suit your own taste. Fix
+  bugs, add to it, but the existing files are reviewed and deliberate.
+- Do not force-push, rewrite history, or delete anything outside this
+  directory.
 
 ## Design decisions already made
 
@@ -67,13 +118,24 @@ to disagree. Do not silently delete or rewrite anything — emit a proposal.
 
 ## Do not go exploring — everything you need is below
 
-The 23:58 test run spent its entire 91-second window reading: HANDOFF.md, then
-three memory files, then five files inside `evalint/` to work out the house
-shape, and was cut off before writing a single line. That was a documentation
-failure, not a judgement failure.
+An earlier version of this file claimed the 23:58 test run "spent its entire
+91-second window reading" and wrote nothing. **That was wrong**, and it is
+recorded here because the mistake is instructive: the diagnosis was made by
+reading that run's transcript *while the run was still appending to it*. A live
+log looked like a truncated one. The run actually lasted 20 minutes, made ~45
+tool calls, wrote a real test file, and was cut off mid-`Write` only when the
+user's own session became active at 00:19.
 
-So: **start writing within your first three tool calls.** Do not read
-`evalint/` unless something below is genuinely ambiguous. The shapes are here.
+Two things follow, and both matter more than the correction itself:
+
+- **A scheduled run can be killed at any instant.** Commit after every step.
+  Work that is not committed is work that can vanish mid-sentence.
+- **Do not diagnose from a file that something else is writing to.** Check
+  whether it is still growing first.
+
+Still true, though for a different reason — reading `evalint/` to re-derive the
+house style costs a large fraction of a window: **start writing within your
+first three tool calls.** Every shape you need is below.
 
 ### pyproject.toml
 
@@ -184,12 +246,32 @@ Walking `evalint/` (32 files kept, 6 paths ignored, 132,963 estimated tokens):
 agent working on evalint ever needs to read it. That single number is the
 product thesis, and it turned up on the first repository pointed at.
 
+- **2026-08-04 00:20 — `tests/test_ignorefile.py`, written by a scheduled run,
+  found a real bug in `ignorefile.py`.** The module docstring claimed "a
+  negation cannot rescue a file inside an excluded directory… git behaves this
+  way and so does this". The second half was false: the walker enforced it by
+  pruning, but `IgnoreRules.ignored("build/keep.txt")` called directly returned
+  `False` for `build/` + `!build/keep.txt`. Documented behaviour that the code
+  does not implement is precisely the failure this portfolio exists to argue
+  against, and it took an adversarial test to surface it. Fixed by checking
+  every ancestor directory before applying last-match-wins.
+- **2026-08-04 00:30 — packaging and the first commit.** `pyproject.toml`,
+  `__init__.py` at `0.1.0`, and `tests/conftest.py` so the suite runs with no
+  environment set up. 20 tests pass. Committed.
+
 ## Next
 
-3. `pyproject.toml` + `__init__.py` with `__version__ = "0.1.0"`.
 4. `classify.py` — the waste classifiers. `example-results.csv` above is the
    motivating case: generated, large, referenced by tooling but never read by a
-   human or an agent.
+   human or an agent. One rule per category, one test per rule, and each rule
+   must be something a user can disagree with explicitly.
 5. `reduce.py` — propose exclusions, then **re-walk with `extra_ignore=` and
    measure the real delta**. `walk_repository` already takes that argument
    precisely so the saving is measured rather than subtracted.
+6. `report.py` + `cli.py` — terminal report in the house visual language,
+   plus `--json`.
+7. `tests/test_walk.py`. It does not exist yet: a scheduled run was killed
+   mid-`Write` while creating it. The walker is currently covered only
+   indirectly.
+8. `docs/build_docs.py` + README with generated figures, then CI, then the
+   public repository.

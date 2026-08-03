@@ -268,17 +268,34 @@ product thesis, and it turned up on the first repository pointed at.
   `__init__.py` at `0.1.0`, and `tests/conftest.py` so the suite runs with no
   environment set up. 20 tests pass. Committed.
 
+- **2026-08-04 01:0x — `classify.py` done, 8 rules, 20 tests.** Confidence is a
+  field (`certain` / `likely` / `possible`) and the lowest tier is never acted
+  on. Pointing it at `C:\Users\35021\Desktop\tokenBridge Code` (a real, messy
+  JS repo — keep using it, `evalint` is too clean to exercise the rules) found
+  three defects that no fixture written from the rule descriptions would have:
+  the generated-file marker was the bare substring `generated file` and matched
+  the prose "chatgpt-**generated file**s" at `certain` confidence; the evidence
+  quote took the first 90 characters of the line so the marker itself could be
+  cut off, which is what made the first bug visible; and dense content was
+  reported as `minified`, a word that claims a readable original exists
+  elsewhere, which is false for the JSON manifests it mostly fires on. Each has
+  a regression test named for what went wrong.
+- **2026-08-04 01:1x — `reduce.py` done, 10 tests.** Proposes patterns, walks
+  the repository *again*, and takes the difference. Then compares what vanished
+  against what was named: if a directory pattern over-reached, it narrows to
+  exact paths, walks a third time, and records `narrowed_from` so the
+  correction is visible. Measured on tokenBridge Code:
+  **3,645,027 → 585,725 tokens, 84% saved.** On evalint the honest answer is
+  0%, because its one finding is `possible`.
+
 ## Next
 
-4. `classify.py` — the waste classifiers. `example-results.csv` above is the
-   motivating case: generated, large, referenced by tooling but never read by a
-   human or an agent. One rule per category, one test per rule, and each rule
-   must be something a user can disagree with explicitly.
-5. `reduce.py` — propose exclusions, then **re-walk with `extra_ignore=` and
-   measure the real delta**. `walk_repository` already takes that argument
-   precisely so the saving is measured rather than subtracted.
 6. `report.py` + `cli.py` — terminal report in the house visual language,
-   plus `--json`.
+   plus `--json`. `Reduction.as_dict()` and `Finding.as_dict()` already exist
+   for the JSON path. The report must print the error bound, must say the
+   saving was measured rather than estimated, must list the `possible` tier
+   separately as the user's decision, and must print `narrowed_from` when a
+   pattern was corrected.
 7. `tests/test_walk.py`. It does not exist yet: a scheduled run was killed
    mid-`Write` while creating it. The walker is currently covered only
    indirectly.

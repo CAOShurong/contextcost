@@ -1,0 +1,83 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "contextcost"
+dynamic = ["version"]
+description = "Measure what a repository costs an AI coding agent to read, find what is wasting that budget, and prove the saving by re-measuring."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "Shurong Cao", email = "shurongcao2026@gmail.com" }]
+keywords = [
+    "llm",
+    "context-window",
+    "tokens",
+    "token-count",
+    "ai-agent",
+    "claude-code",
+    "cursor",
+    "codebase-analysis",
+    "prompt-engineering",
+    "developer-tools",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+# No runtime dependencies, on purpose. The obvious one would be tiktoken, for
+# exact token counts -- and it is a compiled dependency with a wheel per
+# platform. A tool whose whole pitch is "find out what your repo costs in ten
+# seconds" cannot open with a build toolchain. See src/contextcost/estimate.py
+# for what is given up instead, and what is reported in its place.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/CAOShurong/contextcost"
+Repository = "https://github.com/CAOShurong/contextcost"
+Issues = "https://github.com/CAOShurong/contextcost/issues"
+Changelog = "https://github.com/CAOShurong/contextcost/blob/main/CHANGELOG.md"
+
+[project.scripts]
+contextcost = "contextcost.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "ruff>=0.6"]
+
+[tool.hatch.version]
+path = "src/contextcost/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/contextcost"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "docs", "README.md", "LICENSE", "CHANGELOG.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests state gitignore cases as literal tables, and the width is the point.
+"tests/*" = ["E501"]

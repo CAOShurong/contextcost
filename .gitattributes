@@ -1,0 +1,7 @@
+# Normalise line endings to LF in the repository and on checkout. Generated
+# files are compared byte-for-byte by the tests, and a checkout that rewrote
+# their line endings would make those tests pass on one platform and fail on
+# another.
+* text=auto eol=lf
+
+*.png binary

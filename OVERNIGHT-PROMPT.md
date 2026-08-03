@@ -46,7 +46,25 @@ costs a large fraction of a window and is the reason that section was inlined.
 
 **Start writing within your first three tool calls.**
 
-## 3. Do the next unstarted item on the Next list
+## 3. Keep working until you are cut off — do not stop after one item
+
+**This overrides the task prompt if it reads otherwise.** The prompt that
+started you says "do the next unstarted item", and taken literally that is
+wrong: it would have you finish one thing in ten minutes and stop, leaving the
+rest of the slot idle. The owner's actual constraint is a usage window that
+expires whether or not it is used.
+
+So: finish an item, commit, push, log it — then **immediately start the next
+one**. Keep going until the list is empty or you are cut off mid-sentence.
+Being cut off is the expected ending, not a failure; that is why every step
+commits before the next begins.
+
+Do not wind down early, do not stop to write a summary "while there is still
+time", and do not decide the remaining work is too large to start. Start it.
+Half of a committed module is worth more to the next run than a tidy stopping
+point, because the log tells them exactly where you were.
+
+## 3a. The Next list, in order
 
 In order. Do not skip ahead to the interesting part, and do not rewrite a
 module that already exists to suit your taste — the existing files are reviewed

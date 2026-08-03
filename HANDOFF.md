@@ -28,6 +28,15 @@ loading a repo. They are the first user.
 20 tests pass. The repository is a git repo with one commit and **no remote
 yet**. See the progress log at the bottom for what each step actually did.
 
+## Keep working until you are cut off
+
+If the prompt that started you says "do the next unstarted item", read that as
+**"work through the Next list continuously"**. One item then stopping leaves
+most of a usage window unused, and the window expires whether or not it is
+spent. Finish an item, commit, push, log, start the next one immediately. Being
+cut off mid-sentence is the expected ending — that is precisely why every step
+commits before the following one begins.
+
 ## Operating facts for an unattended run
 
 Verified on 2026-08-04 00:30, so none of this needs rediscovering:

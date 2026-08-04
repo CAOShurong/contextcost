@@ -100,7 +100,30 @@ Two caveats that belong here rather than in a footnote. **It is one
 tokenizer** — Anthropic and most others do not publish theirs, so this is a
 proxy, and "byte-pair encoders land close to each other" is doing real work in
 that sentence. And **the corpus is this repository's own files** plus synthetic
-dense samples; it is real code and real prose, but it is not yours.
+dense and CJK samples; it is real code and real prose, but it is not yours.
+
+### CJK is counted per script, not as one thing
+
+Charging Chinese at the Latin rate under-counts it roughly threefold, so CJK
+has always been counted separately. What was wrong until recently is that it
+was counted as *one* category, and the scripts are not close to each other:
+
+| script | tokens per character |
+| --- | ---: |
+| Japanese kana | 0.85 |
+| Korean hangul | 1.10 |
+| Chinese, simplified | 1.08 |
+| **Chinese, traditional** | **1.55** |
+
+Traditional Chinese costs 44% more per character than simplified for the same
+sentence, because the tokenizer has far fewer merges for it. A single constant
+under-counted it by 30% — and traditional is what this project's author writes
+documentation in, so the first real user would have been the one mis-billed.
+
+Simplified and traditional share a Unicode block, so they are told apart by
+looking for characters that exist only in the traditional set. Measured on
+prose: 27% of traditional Han characters trip that detector, and 0% of
+simplified ones.
 
 For most of this project's life that bound read `±12%`, and it had been chosen
 rather than measured — the comment beside it cited a calibration script that

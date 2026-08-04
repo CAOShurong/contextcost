@@ -29,6 +29,9 @@ First release.
   drawing characters, `--json` output, and `--write-gitignore`.
 - `docs/calibrate.py`, which measures the estimator against `cl100k_base` and
   writes the observed error into `ERROR_BOUND`.
+- Per-script CJK counting. Japanese kana, Korean hangul, simplified Chinese and
+  traditional Chinese each cost a different amount per character, spanning 0.85
+  to 1.55 — a single constant under-counted traditional Chinese by 30%.
 
 ### Known limitations
 
@@ -40,3 +43,6 @@ First release.
   fixture from the subject of the work.
 - No users yet. Every number here is measured, which is not the same as being
   battle-tested.
+- Simplified and traditional Chinese are told apart by a short list of
+  traditional-only characters. It recognises the script, it is not a conversion
+  table, and a document mixing both is charged the traditional rate throughout.

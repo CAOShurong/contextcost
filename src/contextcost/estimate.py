@@ -73,6 +73,34 @@ DENSE_OPAQUE_RATIO = 1.41
 #: base64 sits at 0.032, hex digests at 0.000, and real manifests at 0.104.
 DENSE_PUNCTUATION = 0.06
 
+#: Tokens per CJK character, by script. A CJK character is roughly one token,
+#: which is why a single constant survived so long -- but "roughly" hides a
+#: 32% spread, and it is wrong in both directions at once.
+#:
+#: Traditional Chinese is the case that matters most here and was the worst:
+#: the tokenizer has far fewer merges for it than for simplified, so the same
+#: sentence costs 44% more. The author works in Hong Kong and writes
+#: traditional Chinese documentation, which is exactly the first user this
+#: would have quietly under-billed by a third.
+CJK_HAN_SIMPLIFIED = 1.08
+CJK_HAN_TRADITIONAL = 1.55
+CJK_KANA = 0.85
+CJK_HANGUL = 1.1
+
+#: Share of Han characters that must be traditional-only before the text is
+#: treated as traditional. Measured samples land at 27% for traditional prose
+#: and 0% for simplified, so anything in this region separates them; low
+#: enough to catch a mostly-simplified document quoting traditional text.
+TRADITIONAL_THRESHOLD = 0.03
+
+#: Characters that exist only in traditional Chinese. Deliberately short --
+#: it needs to recognise the script, not to be a conversion table, and every
+#: one of these is common enough to appear within a sentence or two of real
+#: traditional prose.
+_TRADITIONAL_ONLY = frozenset(
+    "這個們學灣體應對開關國經濟發展壓縮實現轉換處數時讀寫證驗倉檔編範圍點擊選擇來說進當義關聯網絡機軟資訊執測錯誤變條標準將無齊圖書館買賣讓認識稱職業"
+)
+
 #: Runs of this many characters without whitespace are treated as dense:
 #: base64 payloads, minified bundles, hashes, embedded data URIs. Chosen
 #: because ordinary source lines break well below it -- the longest identifiers
@@ -172,13 +200,59 @@ def _dense_ratio(text: str) -> float:
     return DENSE_STRUCTURED_RATIO if share >= DENSE_PUNCTUATION else DENSE_OPAQUE_RATIO
 
 
+def _traditional_share(text: str) -> float:
+    """How much of the Han in ``text`` is written in traditional characters.
+
+    Simplified and traditional Chinese occupy the same Unicode block, so a
+    codepoint range cannot separate them. This looks for characters that exist
+    only in the traditional set. The two populations do not overlap in
+    practice: measured over prose samples, traditional text scores about 27%
+    and simplified text scores 0%.
+    """
+    han = [ch for ch in text if "一" <= ch <= "鿿"]
+    if not han:
+        return 0.0
+    return sum(1 for ch in han if ch in _TRADITIONAL_ONLY) / len(han)
+
+
+def _cjk_tokens(text: str) -> float:
+    """Estimated tokens for the CJK characters in ``text``.
+
+    One ratio for all of CJK was wrong by up to 32%, and wrong in both
+    directions: traditional Chinese costs 1.55 tokens per character while kana
+    costs 0.85. Every figure here is measured by ``docs/calibrate.py``.
+    """
+    han = kana = hangul = other = 0
+    for ch in text:
+        if not _is_cjk(ch):
+            continue
+        if "一" <= ch <= "鿿" or "㐀" <= ch <= "䶿":
+            han += 1
+        elif "぀" <= ch <= "ヿ":
+            kana += 1
+        elif "가" <= ch <= "힯" or "ᄀ" <= ch <= "ᇿ":
+            hangul += 1
+        else:
+            # Fullwidth punctuation and the CJK symbol block. Close enough to
+            # one token each, and too small a share to be worth calibrating.
+            other += 1
+
+    han_ratio = (
+        CJK_HAN_TRADITIONAL
+        if _traditional_share(text) >= TRADITIONAL_THRESHOLD
+        else CJK_HAN_SIMPLIFIED
+    )
+    return han * han_ratio + kana * CJK_KANA + hangul * CJK_HANGUL + other * 1.0
+
+
 def estimate_tokens(text: str) -> Estimate:
     """Estimate the token cost of ``text``.
 
-    CJK is counted separately because the ratio does not apply to it at all:
-    Latin script averages several characters per token, while a CJK character
-    is usually a token on its own and sometimes two. A repository with Chinese
-    documentation would otherwise be under-counted by a factor of three.
+    CJK is counted separately because the characters-per-token ratio does not
+    apply to it at all: Latin script averages several characters per token,
+    while a CJK character is usually a token on its own and sometimes two. A
+    repository with Chinese documentation would otherwise be under-counted by
+    a factor of three.
     """
     if not text:
         return Estimate(0, 0, "prose")
@@ -191,9 +265,7 @@ def estimate_tokens(text: str) -> Estimate:
         kind
     ]
 
-    # 1.05 rather than 1.0 for CJK: most common characters are one token, but
-    # rarer ones split into two, and the average sits just above one.
-    tokens = int(round(rest / ratio + cjk * 1.05))
+    tokens = int(round(rest / ratio + _cjk_tokens(text)))
     return Estimate(max(tokens, 1 if text.strip() else 0), len(text), kind)
 
 

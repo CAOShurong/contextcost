@@ -112,6 +112,7 @@ def corpus() -> list[tuple[str, str, str]]:
         samples.append(("<module prose>", "prose", "\n\n".join(docstrings)))
 
     samples.extend(_dense_samples())
+    samples.extend(_cjk_samples())
     return samples
 
 
@@ -136,6 +137,34 @@ def _dense_samples() -> list[tuple[str, str, str]]:
         ("<random base64>", "dense", opaque),
         ("<hex digests>", "dense", digests),
         ("<structured manifest>", "dense", structured),
+    ]
+
+
+def _cjk_samples() -> list[tuple[str, str, str]]:
+    """Every script the estimator treats separately.
+
+    These are in the corpus because CJK went entirely unmeasured until it was
+    not: a single ratio for all of it under-counted traditional Chinese by 30%,
+    which is the script this project's author writes documentation in.
+    """
+    simplified = (
+        "这个工具用来测量代码仓库让人工智能编程助手读取时的成本，"
+        "它会找出哪些文件在浪费预算，然后重新走一遍仓库来验证节省的数量。"
+    )
+    traditional = (
+        "這個工具用來測量程式碼倉庫讓人工智慧編程助手讀取時的成本，"
+        "並且找出哪些檔案在浪費預算，然後重新走一遍倉庫來驗證節省的數量。"
+    )
+    japanese = (
+        "このツールはリポジトリをコーディングエージェントが読むときの"
+        "コストを測定します。無駄なファイルを見つけて、実際に再測定します。"
+    )
+    korean = "이 도구는 저장소를 코딩 에이전트가 읽는 데 드는 비용을 측정합니다."
+    return [
+        ("<chinese simplified>", "prose", simplified * 8),
+        ("<chinese traditional>", "prose", traditional * 8),
+        ("<japanese>", "prose", japanese * 8),
+        ("<korean>", "prose", korean * 10),
     ]
 
 

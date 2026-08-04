@@ -22,6 +22,7 @@ Usage:
 from __future__ import annotations
 
 import os
+import re
 import sys
 import tempfile
 
@@ -266,6 +267,32 @@ repository, not a sum of what was dropped.
 {END}"""
 
 
+def check_test_count() -> str | None:
+    """Whether the test count quoted in the README is still true.
+
+    It went stale within a day of being written, and a README quoting a test
+    count the suite no longer has is a small version of exactly what this
+    project complains about. Counting `def test_` rather than running pytest
+    keeps `--check` fast; the two agree because every test here is a plain
+    function.
+    """
+    import glob
+
+    actual = 0
+    for path in glob.glob(os.path.join(ROOT, "tests", "test_*.py")):
+        with open(path, encoding="utf-8") as handle:
+            actual += sum(1 for line in handle if line.startswith("def test_"))
+
+    with open(os.path.join(ROOT, "README.md"), encoding="utf-8") as handle:
+        readme = handle.read()
+
+    stated = re.findall(r"(\d+) tests", readme)
+    wrong = [n for n in stated if int(n) != actual]
+    if wrong:
+        return f"README says {', '.join(wrong)} tests; there are {actual}"
+    return None
+
+
 def build(check: bool) -> int:
     with tempfile.TemporaryDirectory() as workspace:
         example_repository(workspace)
@@ -302,6 +329,10 @@ def build(check: bool) -> int:
                 "README.md is out of date. Run: python docs/build_docs.py",
                 file=sys.stderr,
             )
+            return 1
+        stale = check_test_count()
+        if stale:
+            print(stale, file=sys.stderr)
             return 1
         print("README.md is up to date.")
         return 0

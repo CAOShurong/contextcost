@@ -1,5 +1,10 @@
 # contextcost
 
+[![CI](https://github.com/CAOShurong/contextcost/actions/workflows/ci.yml/badge.svg)](https://github.com/CAOShurong/contextcost/actions/workflows/ci.yml)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](https://pypi.org/project/contextcost/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Dependencies: none](https://img.shields.io/badge/dependencies-none-brightgreen)](pyproject.toml)
+
 **What does this repository cost an AI coding agent to read, and what is
 wasting that budget?**
 

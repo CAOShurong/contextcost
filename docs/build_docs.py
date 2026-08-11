@@ -167,7 +167,7 @@ def figure_breakdown(walk, findings, path: str) -> None:
 
     legend = height - 28
     draw.rectangle([34, legend, 50, legend + 13], fill=WASTE)
-    draw.text((58, legend - 2), "not worth reading", font=small, fill=MUTED)
+    draw.text((58, legend - 2), "candidate context waste", font=small, fill=MUTED)
     draw.rectangle([214, legend, 230, legend + 13], fill=KEPT)
     draw.text((238, legend - 2), "worth reading", font=small, fill=MUTED)
     image.save(path)

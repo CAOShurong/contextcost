@@ -1,9 +1,11 @@
-"""Reading ``.gitignore``, because getting it wrong changes every number.
+"""Reading consumer ignore files, because getting them wrong changes every number.
 
-This tool's whole output is "here is what your repository costs an agent". If
-it walks files git would never show, the number is wrong in the direction that
-matters most -- `.venv/` and `node_modules/` are enormous, and counting them
-would make every repository look identically bloated and the tool useless.
+This tool's whole output is "here is what this consumer may spend on the
+repository". If it walks files that consumer excludes, the number is wrong in
+the direction that matters most -- `.venv/` and `node_modules/` are enormous,
+and counting them would make every repository look identically bloated and the
+tool useless. If it misses a consumer-native ignore file, a proposal can also
+be written to the wrong place and produce no saving in the real tool.
 
 So the matching has to be real, not a substring check. The rules that actually
 bite, in the order people trip over them:
@@ -20,9 +22,10 @@ bite, in the order people trip over them:
   makes the walk fast -- and it also means a negation cannot rescue a file
   inside an excluded directory. Git behaves this way and so does this.
 
-There is no attempt to be bug-compatible with git in every corner. Where the
-behaviour here is knowingly narrower it is written down, because a silent
-difference would show up as a number nobody could explain.
+There is no attempt to reproduce every product's retrieval, built-in defaults,
+tokenizer or per-request behaviour. The profiles model documented ignore-file
+inputs only. Where behaviour is knowingly narrower it is written down, because
+a silent difference would show up as a number nobody could explain.
 """
 
 from __future__ import annotations
@@ -31,7 +34,72 @@ import os
 import re
 from dataclasses import dataclass, field
 
-__all__ = ["IgnoreRules", "Pattern", "load_ignore_rules", "parse_ignore"]
+__all__ = [
+    "CONSUMERS",
+    "IgnoreRules",
+    "Pattern",
+    "active_ignore_files",
+    "consumer_write_file",
+    "load_ignore_rules",
+    "parse_ignore",
+]
+
+
+#: Documented root-level ignore inputs for the consumers ContextCost can model.
+#: Every profile still uses nested ``.gitignore`` files unless the caller asks
+#: for ``use_gitignore=False``. These are file-selection profiles, not claims
+#: about a product's tokenizer, retrieval, compression, or per-request billing.
+_CONSUMER_IGNORE_FILES = {
+    "generic": (),
+    "cursor": (".cursorignore",),
+    "aider": (".aiderignore",),
+    "repomix": (".ignore", ".repomixignore", ".git/info/exclude"),
+}
+
+#: Where a verified proposal should be written for each consumer. Writing to
+#: the consumer-native file matters: Git's own documentation is explicit that
+#: adding an already tracked path to ``.gitignore`` does not stop tracking it.
+_CONSUMER_WRITE_FILES = {
+    "generic": ".gitignore",
+    "cursor": ".cursorignore",
+    "aider": ".aiderignore",
+    "repomix": ".repomixignore",
+}
+
+CONSUMERS = tuple(_CONSUMER_IGNORE_FILES)
+
+
+def _consumer_files(consumer: str) -> tuple[str, ...]:
+    try:
+        return _CONSUMER_IGNORE_FILES[consumer]
+    except KeyError as exc:  # pragma: no cover - argparse rejects this for the CLI
+        choices = ", ".join(CONSUMERS)
+        raise ValueError(
+            f"unknown consumer {consumer!r}; choose from {choices}"
+        ) from exc
+
+
+def consumer_write_file(consumer: str) -> str:
+    """Return the consumer-native file that should receive proposals."""
+    _consumer_files(consumer)
+    return _CONSUMER_WRITE_FILES[consumer]
+
+
+def active_ignore_files(
+    root: str, *, use_gitignore: bool = True, consumer: str = "generic"
+) -> list[str]:
+    """List existing root-level ignore inputs in their application order."""
+    consumer_files = tuple(
+        relative
+        for relative in _consumer_files(consumer)
+        if use_gitignore or relative != ".git/info/exclude"
+    )
+    candidates = ((".gitignore",) if use_gitignore else ()) + consumer_files
+    active = []
+    for relative in candidates:
+        if relative not in active and os.path.isfile(os.path.join(root, relative)):
+            active.append(relative)
+    return active
 
 
 @dataclass(frozen=True)
@@ -221,7 +289,9 @@ ALWAYS_SKIP = (
 )
 
 
-def load_ignore_rules(root: str, *, use_gitignore: bool = True) -> IgnoreRules:
+def load_ignore_rules(
+    root: str, *, use_gitignore: bool = True, consumer: str = "generic"
+) -> IgnoreRules:
     """The rules in force at the root of a repository.
 
     Only the top-level ignore file is read here; nested ones are picked up by
@@ -229,10 +299,10 @@ def load_ignore_rules(root: str, *, use_gitignore: bool = True) -> IgnoreRules:
     directory and cannot be flattened into a single list up front.
     """
     rules = IgnoreRules()
-    if not use_gitignore:
-        return rules
-    path = os.path.join(root, ".gitignore")
-    if os.path.isfile(path):
+    for relative in active_ignore_files(
+        root, use_gitignore=use_gitignore, consumer=consumer
+    ):
+        path = os.path.join(root, relative)
         with open(path, encoding="utf-8", errors="replace") as handle:
             rules = rules.extend(parse_ignore(handle.read()))
     return rules

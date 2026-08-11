@@ -160,6 +160,14 @@ def _header(walk: WalkResult, ink: _Ink) -> list[str]:
         f"{_plural(walk.ignored_count, 'path')} ignored",
     ]
     lines.append(ink("  " + f" {ink.glyph['dot']} ".join(counts), "dim"))
+    if walk.consumer != "generic":
+        inputs = ", ".join(walk.ignore_files) or "none found"
+        lines.append(
+            ink(
+                f"  consumer: {walk.consumer} {ink.glyph['dot']} inputs: {inputs}",
+                "dim",
+            )
+        )
     if walk.skipped:
         lines.append(
             ink(
@@ -203,7 +211,7 @@ def _largest(walk: WalkResult, ink: _Ink, top: int) -> list[str]:
 def _findings(reduction: Reduction, ink: _Ink, top: int) -> list[str]:
     if not reduction.findings:
         return []
-    lines = _section("WHAT IS NOT WORTH READING", ink)
+    lines = _section("CANDIDATE CONTEXT WASTE", ink)
     for name, group in by_rule(reduction.findings).items():
         rule = group[0].rule
         total = sum(f.tokens for f in group)
@@ -261,7 +269,7 @@ def _saving(reduction: Reduction, ink: _Ink) -> list[str]:
     lines = _section("SAVING", ink)
     if not reduction.patterns:
         lines.append(
-            ink("  Nothing proposed. Nothing here is confidently waste.", "dim")
+            ink("  Nothing proposed. No rule found actionable context waste.", "dim")
         )
         if reduction.deferred:
             lines.append(
@@ -302,7 +310,12 @@ def _saving(reduction: Reduction, ink: _Ink) -> list[str]:
         lines.append(ink("  never proposed, so exact paths are used instead.", "dim"))
 
     lines.append("")
-    lines.append(ink("  Add to .gitignore (or run with --write-gitignore):", "dim"))
+    flag = (
+        "--write-gitignore"
+        if reduction.ignore_file == ".gitignore"
+        else "--write-ignore"
+    )
+    lines.append(ink(f"  Add to {reduction.ignore_file} (or run with {flag}):", "dim"))
     for pattern in reduction.patterns[:12]:
         lines.append("    " + ink(pattern, "cyan"))
     if len(reduction.patterns) > 12:

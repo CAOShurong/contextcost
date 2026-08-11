@@ -27,7 +27,7 @@ WHERE IT GOES
   vendor                    12,704  ████████·····················  17%
   src                        9,331  ██████·······················  13%
 
-WHAT IS NOT WORTH READING
+CANDIDATE CONTEXT WASTE
   certain  lockfile         38,905  1 file
              38,905  package-lock.json
                       package-lock.json is written by a package manager
@@ -58,9 +58,9 @@ No dependencies. Python 3.9+.
 Every coding agent — Claude Code, Cursor, Codex, Copilot Workspace, an
 in-house one — spends part of its context window just working out what is in
 your repository. That budget is finite and it is charged per token, and most
-repositories quietly spend a large fraction of it on files no human and no
-agent will ever read: lockfiles, minified bundles, vendored dependencies,
-snapshot fixtures, generated clients.
+repositories quietly spend a large fraction of it on files that often add
+little to an ordinary source-code task: lockfiles, minified bundles, vendored
+dependencies, snapshot fixtures, generated clients.
 
 The first repository this was ever pointed at had **55% of its entire context
 cost in a single generated CSV**.
@@ -137,6 +137,10 @@ argues against unverified numbers should say when it shipped one.
 **It will not decide the ambiguous cases for you.** Findings carry a
 confidence: `certain` (the file says what it is, or its name is reserved by
 the tool that wrote it), `likely` (a strong path convention), and `possible`.
+Confidence describes the evidence for the file's category, **not universal
+irrelevance**: a lockfile is machine-written with certainty and can still be
+essential during a dependency upgrade. Read the proposal in the context of
+the work you use the agent for.
 That last tier — mostly large data files — is **never excluded automatically**,
 because a large CSV is waste in a web app and is the entire subject in an
 analysis repository, and nothing visible from the file system tells those
@@ -144,7 +148,16 @@ apart. Those are listed separately, with the rule's reasoning, for you to
 judge. `--include-possible` moves them in.
 
 **It never edits your repository unless you ask.** The default output is a
-proposal. `--write-gitignore` appends it and tells you exactly what it wrote.
+proposal. `--write-ignore` targets the selected consumer's native ignore file;
+`--write-gitignore` remains available as an explicit compatibility option.
+Write mode refuses a symbolic-link destination instead of following it beyond
+the repository boundary.
+
+**It does not reproduce a live product's prompt or bill.** Consumer profiles
+model documented ignore-file inputs: the set of text files eligible for
+context. They do not reproduce semantic retrieval, repo maps, compression,
+tool calls, product default exclusions, a proprietary tokenizer, or how much
+one particular request actually sends.
 
 **It has no users yet.** This is a new tool. The estimator's error bound is
 measured against a reference tokenizer, and the reduction is measured rather
@@ -156,8 +169,8 @@ thousand repositories by people who did not write it.
 This is the part worth being suspicious of in any tool that claims one, so
 here is the mechanism in full.
 
-1. Walk the repository, respecting `.gitignore`. Attribute a cost to every
-   file.
+1. Walk the repository, respecting the selected consumer's ignore inputs.
+   Attribute a cost to every eligible file.
 2. Classify what looks wasteful, with quoted evidence per file.
 3. Turn the findings into ignore patterns.
 4. **Walk the repository again with those patterns applied.**
@@ -208,13 +221,44 @@ contextcost                       # measure the current directory
 contextcost path/to/repo          # measure somewhere else
 contextcost --json                # machine-readable, for scripts and CI
 contextcost --include-possible    # also act on large data files
-contextcost --write-gitignore     # append the proposal to .gitignore
+contextcost --consumer cursor     # include .cursorignore in the measurement
+contextcost --consumer aider      # include .aiderignore in the measurement
+contextcost --consumer repomix    # include Repomix's documented ignore files
+contextcost --consumer cursor --write-ignore  # append to .cursorignore
+contextcost --write-gitignore     # explicit legacy .gitignore destination
 contextcost --no-gitignore        # count files git would hide
 contextcost --top 20              # more rows per section
+python -m contextcost --version   # module entry point also works
 ```
 
-The exit code is `1` when something confidently wasteful was found and `0`
-when it was not, so this works as a CI check:
+## Consumer-native ignore files
+
+The same repository has a different eligible file set in different tools.
+ContextCost therefore measures the selected consumer and writes a verified
+proposal to the file that consumer actually documents:
+
+| `--consumer` | additional inputs | `--write-ignore` destination |
+| --- | --- | --- |
+| `generic` | nested `.gitignore` files | `.gitignore` |
+| `cursor` | `.cursorignore` | `.cursorignore` |
+| `aider` | `.aiderignore` | `.aiderignore` |
+| `repomix` | `.ignore`, `.repomixignore`, `.git/info/exclude` | `.repomixignore` |
+
+All non-generic profiles also use nested `.gitignore` files unless
+`--no-gitignore` is supplied. Cursor documents `.cursorignore` as the stronger
+boundary for keeping files out of AI requests; Aider documents `.aiderignore`
+for large repositories; Repomix documents `.repomixignore` in the same syntax
+as `.gitignore`. The exact scope and the limitations of each model are recorded
+in [consumer profiles](docs/consumer-profiles.md).
+
+This distinction matters for tracked files. Git itself says that
+`.gitignore` applies to intentionally untracked files and does not stop
+tracking a file already in the index. A consumer may still use that pattern as
+its own context filter, but writing `.cursorignore`, `.aiderignore`, or
+`.repomixignore` expresses the intended AI-tool boundary directly.
+
+The exit code is `1` when an actionable context-waste candidate was found and
+`0` when it was not, so this works as a CI check:
 
 ```yaml
 - name: Keep the context budget honest
@@ -235,9 +279,9 @@ contextcost --json > cost.json || true
 ```python
 from contextcost.reduce import reduce_repository
 
-result = reduce_repository("path/to/repo")
+result = reduce_repository("path/to/repo", consumer="aider")
 print(result.before, "->", result.after)   # both measured
-print(result.patterns)                     # what to add to .gitignore
+print(result.patterns)                     # what to add to .aiderignore
 print(result.deferred)                     # what it refused to decide
 ```
 
@@ -247,7 +291,7 @@ separately, and every dataclass has `as_dict()`.
 ## Development
 
 ```bash
-python -m pytest -q                      # 101 tests, no configuration needed
+python -m pytest -q                      # 110 tests, no configuration needed
 python -m ruff check src tests docs
 python docs/build_docs.py                # regenerate the figures and README
 python docs/build_docs.py --check        # CI fails if they are stale
@@ -256,6 +300,21 @@ python docs/build_docs.py --check        # CI fails if they are stale
 The figures above are generated from a real run against a generated example
 repository, and CI fails if the README's numbers drift from what the code
 actually produces.
+
+## Verify a release
+
+Starting with v0.2.0, every GitHub release includes a `SHA256SUMS` manifest and
+GitHub build-provenance attestations for the wheel and source distribution:
+
+```bash
+sha256sum --check SHA256SUMS
+gh attestation verify contextcost-0.2.0-py3-none-any.whl \
+  --repo CAOShurong/contextcost
+```
+
+The GitHub and PyPI files are built once in the same release workflow. Verify
+the downloaded bytes rather than treating a tag or a green job as proof of the
+artifact you installed.
 
 ## Licence
 

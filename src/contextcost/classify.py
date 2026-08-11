@@ -14,6 +14,9 @@ user can read is a reason a user can reject. Rules whose evidence cannot be
 quoted back are not worth having.
 
 **Confidence is a first-class field, and the lowest tier is never acted on.**
+It describes the evidence for a file's category, not whether that category is
+irrelevant to every task. A lockfile is certainly machine-written and can
+still be necessary during a dependency upgrade.
 
 - ``certain`` -- the file says what it is, or its name is reserved by a tool
   that generated it. Excluding it cannot lose anything a human wrote.
@@ -104,8 +107,9 @@ LOCKFILE = Rule(
     summary="Dependency lockfiles",
     rationale=(
         "A lockfile records resolved versions for a package manager to read. "
-        "It is machine-written, often enormous, and an agent that needs a "
-        "dependency version can read the manifest instead."
+        "It is machine-written and often enormous. For ordinary source work "
+        "the manifest is usually the smaller input; dependency upgrades, "
+        "resolution debugging and audits may still need the lockfile."
     ),
     confidence="certain",
 )
@@ -425,7 +429,7 @@ def _match(root: str, cost: FileCost) -> Finding | None:
 
 
 def classify(result: WalkResult) -> list[Finding]:
-    """Every file in ``result`` that some rule says is not worth reading.
+    """Every file in ``result`` that some rule marks as candidate context waste.
 
     Sorted by cost, because the report's job is to put the expensive decision
     first. Two files matching different rules are still ranked against each

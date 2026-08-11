@@ -146,6 +146,69 @@ def test_gitignore_can_be_switched_off(tmp_path):
     assert "hidden/x.py" in paths(walk_repository(root, use_gitignore=False))
 
 
+def test_cursor_and_aider_profiles_add_their_native_ignore_files(tmp_path):
+    for consumer, ignore_name in (
+        ("cursor", ".cursorignore"),
+        ("aider", ".aiderignore"),
+    ):
+        case = tmp_path / consumer
+        root = build(
+            case,
+            {
+                ".gitignore": "git-only.py\n",
+                ignore_name: "consumer-only.py\n",
+                "git-only.py": SOURCE,
+                "consumer-only.py": SOURCE,
+                "src/app.py": SOURCE,
+            },
+        )
+
+        result = walk_repository(root, consumer=consumer)
+        found = paths(result)
+        assert "git-only.py" not in found
+        assert "consumer-only.py" not in found
+        assert "src/app.py" in found
+        assert result.consumer == consumer
+        assert ignore_name in result.ignore_files
+
+
+def test_repomix_profile_models_its_documented_ignore_inputs(tmp_path):
+    root = build(
+        tmp_path,
+        {
+            ".gitignore": "git-only.py\n",
+            ".ignore": "dot-ignore.py\n",
+            ".repomixignore": "repomix-only.py\n",
+            ".git/info/exclude": "info-only.py\n",
+            "git-only.py": SOURCE,
+            "dot-ignore.py": SOURCE,
+            "repomix-only.py": SOURCE,
+            "info-only.py": SOURCE,
+            "src/app.py": SOURCE,
+        },
+    )
+
+    found = paths(walk_repository(root, consumer="repomix"))
+    assert "src/app.py" in found
+    assert not {
+        "git-only.py",
+        "dot-ignore.py",
+        "repomix-only.py",
+        "info-only.py",
+    } & set(found)
+
+    generic = paths(walk_repository(root))
+    assert "dot-ignore.py" in generic
+    assert "repomix-only.py" in generic
+    assert "info-only.py" in generic
+
+    without_git = paths(walk_repository(root, consumer="repomix", use_gitignore=False))
+    assert "git-only.py" in without_git
+    assert "info-only.py" in without_git
+    assert "dot-ignore.py" not in without_git
+    assert "repomix-only.py" not in without_git
+
+
 def test_totals_roll_up_by_directory_and_by_extension(tmp_path):
     root = build(
         tmp_path,

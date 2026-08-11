@@ -4,13 +4,15 @@ Two decisions worth stating, because both are about what the tool refuses to
 do.
 
 **It never writes to the repository unless asked in so many words.** The
-default output is a proposal you can read and disagree with. ``--write-gitignore``
-appends it, prints exactly what it appended, and skips any pattern the file
-already carries. A tool that quietly edited `.gitignore` on a repository
-somebody was about to commit would deserve everything that followed.
+default output is a proposal you can read and disagree with. ``--write-ignore``
+appends it to the selected consumer's native ignore file, prints exactly what
+it appended, and skips any pattern the file already carries.
+``--write-gitignore`` remains an explicit compatibility option. A tool that
+quietly edited an ignore file on a repository somebody was about to commit
+would deserve everything that followed.
 
-**The exit code answers a question worth scripting against.** ``0`` when
-nothing confidently wasteful was found, ``1`` when something was. That makes
+**The exit code answers a question worth scripting against.** ``0`` when no
+actionable context-waste candidate was found, ``1`` when something was. That makes
 ``contextcost --quiet`` usable as a CI check for "did somebody commit a
 lockfile into the context budget", which is the only automated use of this that
 seems genuinely worth having.
@@ -25,6 +27,7 @@ import sys
 
 from . import __version__
 from .estimate import ERROR_BOUND
+from .ignorefile import CONSUMERS, consumer_write_file
 from .reduce import reduce_repository
 from .report import render, supports_colour, supports_unicode
 from .walk import walk_repository
@@ -67,9 +70,24 @@ def _parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--consumer",
+        choices=CONSUMERS,
+        default="generic",
+        help=(
+            "model the documented ignore inputs for generic, Cursor, Aider, "
+            "or Repomix (default: generic)"
+        ),
+    )
+    write = parser.add_mutually_exclusive_group()
+    write.add_argument(
+        "--write-ignore",
+        action="store_true",
+        help="append the verified proposal to the consumer-native ignore file",
+    )
+    write.add_argument(
         "--write-gitignore",
         action="store_true",
-        help="append the proposed patterns to .gitignore",
+        help="append the verified proposal to .gitignore (backward-compatible)",
     )
     parser.add_argument(
         "--top", type=int, default=5, help="rows per section (default: 5)"
@@ -84,7 +102,7 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _write_gitignore(root: str, reduction) -> str:
+def _write_ignore_file(root: str, relative: str, reduction) -> str:
     """Append whatever is not already there, and say what happened.
 
     Deduplicating per pattern rather than refusing when a contextcost block
@@ -95,7 +113,17 @@ def _write_gitignore(root: str, reduction) -> str:
     sees files that are already ignored and can propose patterns that are
     already written down.
     """
-    path = os.path.join(root, ".gitignore")
+    root = os.path.realpath(root)
+    path = os.path.abspath(os.path.join(root, relative))
+    if os.path.lexists(path) and os.path.islink(path):
+        raise OSError(f"refusing to write symbolic link: {relative}")
+    try:
+        contained = os.path.commonpath((root, os.path.realpath(path))) == root
+    except ValueError:
+        contained = False
+    if not contained:
+        raise OSError(f"refusing to write outside the repository: {relative}")
+
     existing = ""
     if os.path.isfile(path):
         with open(path, encoding="utf-8", errors="replace") as handle:
@@ -104,7 +132,7 @@ def _write_gitignore(root: str, reduction) -> str:
     present = {line.strip() for line in existing.splitlines() if line.strip()}
     fresh = [pattern for pattern in reduction.patterns if pattern not in present]
     if not fresh:
-        return "Left .gitignore alone: every proposed pattern is already in it."
+        return f"Left {relative} alone: every proposed pattern is already in it."
 
     block = reduction.gitignore_block(fresh)
     separator = (
@@ -112,9 +140,23 @@ def _write_gitignore(root: str, reduction) -> str:
         if not existing or existing.endswith("\n\n")
         else ("\n" if existing.endswith("\n") else "\n\n")
     )
-    with open(path, "a", encoding="utf-8", newline="\n") as handle:
+    # Check again immediately before opening, then ask the OS not to follow a
+    # link where that flag exists. The second check narrows the Windows race;
+    # O_NOFOLLOW closes it on platforms that provide the flag.
+    if os.path.lexists(path) and os.path.islink(path):
+        raise OSError(f"refusing to write symbolic link: {relative}")
+    flags = os.O_APPEND | os.O_CREAT | os.O_WRONLY
+    flags |= getattr(os, "O_NOFOLLOW", 0)
+    flags |= getattr(os, "O_BINARY", 0)
+    descriptor = os.open(path, flags, 0o666)
+    with os.fdopen(descriptor, "a", encoding="utf-8", newline="\n") as handle:
         handle.write(separator + block)
     return f"Appended {len(fresh)} pattern(s) to {path}"
+
+
+def _write_gitignore(root: str, reduction) -> str:
+    """Backward-compatible wrapper for callers of the v0.1 helper."""
+    return _write_ignore_file(root, ".gitignore", reduction)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -125,14 +167,23 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     use_gitignore = not args.no_gitignore
-    walk = walk_repository(root, use_gitignore=use_gitignore)
+    walk = walk_repository(root, use_gitignore=use_gitignore, consumer=args.consumer)
     reduction = reduce_repository(
-        root, use_gitignore=use_gitignore, include_possible=args.include_possible
+        root,
+        use_gitignore=use_gitignore,
+        include_possible=args.include_possible,
+        consumer=args.consumer,
     )
+    if args.write_gitignore:
+        # The legacy flag is an explicit destination override. Keep the
+        # report and JSON aligned with the file that will actually be written.
+        reduction.ignore_file = ".gitignore"
 
     if args.json:
         payload = {
             "version": __version__,
+            "consumer": args.consumer,
+            "ignore_file": reduction.ignore_file,
             "walk": walk.as_dict(),
             "error_bound": ERROR_BOUND,
             "by_directory": walk.by_directory(),
@@ -153,12 +204,19 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
 
-    if args.write_gitignore:
-        message = (
-            _write_gitignore(root, reduction)
-            if reduction.patterns
-            else "Nothing to write: no patterns proposed."
+    if args.write_gitignore or args.write_ignore:
+        ignore_file = (
+            ".gitignore" if args.write_gitignore else consumer_write_file(args.consumer)
         )
+        try:
+            message = (
+                _write_ignore_file(root, ignore_file, reduction)
+                if reduction.patterns
+                else "Nothing to write: no patterns proposed."
+            )
+        except OSError as exc:
+            print(f"contextcost: could not write {ignore_file}: {exc}", file=sys.stderr)
+            return 2
         if not args.quiet:
             print(message)
 

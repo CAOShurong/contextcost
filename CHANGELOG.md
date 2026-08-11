@@ -6,7 +6,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-## [0.1.0] — unreleased
+## [0.2.0] - 2026-08-11
+
+### Added
+
+- Consumer-aware file selection for Cursor, Aider, and Repomix, including the
+  documented native ignore inputs for each tool.
+- `--write-ignore`, which writes a re-measured proposal to `.cursorignore`,
+  `.aiderignore`, `.repomixignore`, or `.gitignore` as appropriate.
+- Consumer and active ignore-input metadata in JSON and terminal reports.
+- A real `python -m contextcost` entry point.
+- Refusal to follow a symbolic-link ignore destination during write mode.
+
+### Changed
+
+- Clarify that consumer profiles model eligible files, not a live product's
+  proprietary tokenizer, retrieval strategy, prompt, or bill.
+- Keep `--write-gitignore` as an explicit backward-compatible destination.
+
+## [0.1.0] - 2026-08-04
 
 First release.
 
@@ -46,3 +64,6 @@ First release.
 - Simplified and traditional Chinese are told apart by a short list of
   traditional-only characters. It recognises the script, it is not a conversion
   table, and a document mixing both is charged the traditional rate throughout.
+
+[0.2.0]: https://github.com/CAOShurong/contextcost/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/CAOShurong/contextcost/releases/tag/v0.1.0

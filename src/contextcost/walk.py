@@ -7,12 +7,13 @@ defensible first.
 
 Three decisions shape them.
 
-**Only what git would show.** Ignored paths are skipped, and an ignored
-directory is never descended into. Counting `.venv/` would make every
-repository look identically enormous and the report worthless. Nested
-``.gitignore`` files are picked up as the walk reaches them, because their
-patterns anchor to their own directory and cannot be flattened into one list
-in advance.
+**Only what the selected consumer can consider.** Ignored paths are skipped,
+and an ignored directory is never descended into. Counting `.venv/` would
+make every repository look identically enormous and the report worthless.
+The generic profile follows nested ``.gitignore`` files; Cursor, Aider and
+Repomix profiles add their documented root ignore files. The result records
+those inputs, because the same tree can have different eligible context for
+different tools.
 
 **Binary files cost nothing here, and that is a claim worth stating.** An
 agent does not read a PNG as text; it either skips it or pays for a wholly
@@ -32,7 +33,13 @@ import os
 from dataclasses import dataclass, field
 
 from .estimate import SNIFF_BYTES, estimate_tokens, looks_binary
-from .ignorefile import ALWAYS_SKIP, IgnoreRules, load_ignore_rules, parse_ignore
+from .ignorefile import (
+    ALWAYS_SKIP,
+    IgnoreRules,
+    active_ignore_files,
+    load_ignore_rules,
+    parse_ignore,
+)
 
 __all__ = ["FileCost", "WalkResult", "walk_repository"]
 
@@ -88,6 +95,12 @@ class WalkResult:
     #: read this" is information the reader needs to trust the total.
     skipped: list[tuple[str, str]] = field(default_factory=list)
     ignored_count: int = 0
+    # New v0.2 fields stay after the v0.1 positional fields so constructing a
+    # public result object positionally does not silently change meaning.
+    consumer: str = "generic"
+    #: Existing ignore inputs applied at the root, plus nested .gitignore files
+    #: discovered during traversal. Exposed so a number says what shaped it.
+    ignore_files: list[str] = field(default_factory=list)
 
     @property
     def tokens(self) -> int:
@@ -133,6 +146,8 @@ class WalkResult:
     def as_dict(self) -> dict:
         return {
             "root": self.root,
+            "consumer": self.consumer,
+            "ignore_files": self.ignore_files,
             "tokens": self.tokens,
             "bytes": self.bytes,
             "files": len(self.files),
@@ -166,6 +181,7 @@ def walk_repository(
     *,
     use_gitignore: bool = True,
     extra_ignore: list[str] | None = None,
+    consumer: str = "generic",
 ) -> WalkResult:
     """Measure every file an agent would read under ``root``.
 
@@ -174,8 +190,14 @@ def walk_repository(
     applied and compares, rather than subtracting estimates.
     """
     root = os.path.abspath(root)
-    result = WalkResult(root=root)
-    base = load_ignore_rules(root, use_gitignore=use_gitignore)
+    result = WalkResult(
+        root=root,
+        consumer=consumer,
+        ignore_files=active_ignore_files(
+            root, use_gitignore=use_gitignore, consumer=consumer
+        ),
+    )
+    base = load_ignore_rules(root, use_gitignore=use_gitignore, consumer=consumer)
     if extra_ignore:
         base = base.extend(parse_ignore("\n".join(extra_ignore)))
 
@@ -194,6 +216,9 @@ def walk_repository(
             if os.path.isfile(nested):
                 with open(nested, encoding="utf-8", errors="replace") as handle:
                     rules = rules.extend(parse_ignore(handle.read(), relative_dir))
+                relative_ignore = f"{relative_dir}/.gitignore"
+                if relative_ignore not in result.ignore_files:
+                    result.ignore_files.append(relative_ignore)
 
         kept_dirs = []
         for name in dirnames:

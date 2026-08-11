@@ -34,6 +34,7 @@ import re
 from dataclasses import dataclass, field
 
 from .classify import Finding, classify
+from .ignorefile import consumer_write_file
 from .walk import FileCost, WalkResult, walk_repository
 
 __all__ = ["Reduction", "propose_patterns", "reduce_repository"]
@@ -70,6 +71,9 @@ class Reduction:
     narrowed_from: list[str] = field(default_factory=list)
     #: Findings left for the user to decide: the ``possible`` tier.
     deferred: list[Finding] = field(default_factory=list)
+    # New v0.2 fields stay after the v0.1 positional fields for compatibility.
+    consumer: str = "generic"
+    ignore_file: str = ".gitignore"
 
     @property
     def saved(self) -> int:
@@ -87,6 +91,8 @@ class Reduction:
     def as_dict(self) -> dict:
         return {
             "root": self.root,
+            "consumer": self.consumer,
+            "ignore_file": self.ignore_file,
             "before": self.before,
             "after": self.after,
             "saved": self.saved,
@@ -185,6 +191,7 @@ def reduce_repository(
     *,
     use_gitignore: bool = True,
     include_possible: bool = False,
+    consumer: str = "generic",
 ) -> Reduction:
     """Measure the repository, propose exclusions, and measure it again.
 
@@ -194,7 +201,7 @@ def reduce_repository(
     is a fixture or the subject of the work.
     """
     root = os.path.abspath(root)
-    before = walk_repository(root, use_gitignore=use_gitignore)
+    before = walk_repository(root, use_gitignore=use_gitignore, consumer=consumer)
     findings = classify(before)
 
     tiers = ACTED_ON + ("possible",) if include_possible else ACTED_ON
@@ -205,6 +212,8 @@ def reduce_repository(
         root=root,
         before=before.tokens,
         after=before.tokens,
+        consumer=consumer,
+        ignore_file=consumer_write_file(consumer),
         findings=chosen,
         deferred=deferred,
     )
@@ -215,7 +224,12 @@ def reduce_repository(
     if not patterns:
         return reduction
 
-    after = walk_repository(root, use_gitignore=use_gitignore, extra_ignore=patterns)
+    after = walk_repository(
+        root,
+        use_gitignore=use_gitignore,
+        extra_ignore=patterns,
+        consumer=consumer,
+    )
 
     intended = {f.path for f in chosen}
     before_paths = _paths(before)
@@ -232,7 +246,10 @@ def reduce_repository(
             _anchored(p) for p in intended if not _GLOB_METACHARACTERS.search(p)
         )
         after = walk_repository(
-            root, use_gitignore=use_gitignore, extra_ignore=patterns
+            root,
+            use_gitignore=use_gitignore,
+            extra_ignore=patterns,
+            consumer=consumer,
         )
         removed = set(before_paths) - set(_paths(after))
 

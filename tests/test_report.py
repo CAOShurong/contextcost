@@ -138,3 +138,14 @@ def test_sampled_files_are_labelled_as_sampled(tmp_path):
         "the fixture needs to exceed the sampling threshold"
     )
     assert "sampled" in render(walk, reduce_repository(root), colour=False)
+
+
+def test_saving_names_the_consumers_real_ignore_file(tmp_path):
+    root = build(tmp_path, {"yarn.lock": FILLER, "src/app.py": SOURCE})
+    walk = walk_repository(root, consumer="aider")
+    reduction = reduce_repository(root, consumer="aider")
+
+    text = render(walk, reduction, colour=False)
+    assert "consumer: aider" in text
+    assert "Add to .aiderignore" in text
+    assert "--write-ignore" in text

@@ -6,8 +6,16 @@ Everything else the CLI does is printing, which `test_report.py` covers.
 """
 
 import json
+import os
+import pathlib
+import subprocess
+import sys
+
+import pytest
 
 from contextcost.cli import main
+from contextcost.reduce import Reduction
+from contextcost.walk import FileCost, WalkResult
 
 FILLER = "The quick brown fox jumps over the lazy dog. " * 20
 SOURCE = "def add(a, b):\n    return a + b\n" * 30
@@ -152,3 +160,97 @@ def test_no_gitignore_counts_what_git_would_hide(tmp_path, capsys):
     counting_everything = json.loads(capsys.readouterr().out)["walk"]["tokens"]
 
     assert counting_everything > respecting
+
+
+def test_write_ignore_targets_the_selected_consumer_file(tmp_path, capsys):
+    root = build(
+        tmp_path,
+        {".gitignore": "*.pyc\n", "yarn.lock": FILLER, "src/app.py": SOURCE},
+    )
+
+    main([root, "--consumer", "cursor", "--write-ignore", "--no-color"])
+
+    assert (tmp_path / ".gitignore").read_text(encoding="utf-8") == "*.pyc\n"
+    written = (tmp_path / ".cursorignore").read_text(encoding="utf-8")
+    assert "/yarn.lock" in written
+    output = capsys.readouterr().out
+    assert ".cursorignore" in output
+    assert "--write-ignore" in output
+
+    first = written
+    assert main([root, "--consumer", "cursor", "--write-ignore", "--no-color"]) == 0
+    assert (tmp_path / ".cursorignore").read_text(encoding="utf-8") == first
+
+
+def test_legacy_write_flag_overrides_the_consumer_destination(tmp_path, capsys):
+    root = build(tmp_path, {"yarn.lock": FILLER, "src/app.py": SOURCE})
+
+    assert main([root, "--consumer", "cursor", "--write-gitignore", "--json"]) == 1
+    payload = json.loads(capsys.readouterr().out.split("\nAppended", 1)[0])
+
+    assert payload["ignore_file"] == ".gitignore"
+    assert payload["reduction"]["ignore_file"] == ".gitignore"
+    assert "/yarn.lock" in (tmp_path / ".gitignore").read_text(encoding="utf-8")
+    assert not (tmp_path / ".cursorignore").exists()
+
+
+def test_write_ignore_refuses_a_symbolic_link_destination(tmp_path, capsys):
+    root = build(tmp_path, {"yarn.lock": FILLER, "src/app.py": SOURCE})
+    sentinel = tmp_path.parent / f"{tmp_path.name}-outside.txt"
+    sentinel.write_text("outside must survive\n", encoding="utf-8")
+    try:
+        (tmp_path / ".cursorignore").symlink_to(sentinel)
+    except OSError as exc:
+        pytest.skip(f"symbolic links unavailable on this runner: {exc}")
+
+    assert main([root, "--consumer", "cursor", "--write-ignore", "--quiet"]) == 2
+
+    assert sentinel.read_text(encoding="utf-8") == "outside must survive\n"
+    assert "refusing to write symbolic link" in capsys.readouterr().err
+
+
+def test_v01_result_dataclass_positional_order_is_preserved():
+    cost = FileCost("src/app.py", 12, 4, "code")
+    walk = WalkResult("repo", [cost], [("gone.py", "cannot read")], 3)
+    reduction = Reduction("repo", 10, 6, ["/lock"], [], [cost], ["lock"], [])
+
+    assert walk.files == [cost]
+    assert walk.skipped == [("gone.py", "cannot read")]
+    assert walk.ignored_count == 3
+    assert walk.consumer == "generic"
+    assert reduction.patterns == ["/lock"]
+    assert reduction.excluded == [cost]
+    assert reduction.narrowed_from == ["lock"]
+    assert reduction.consumer == "generic"
+
+
+def test_json_names_the_consumer_and_ignore_inputs(tmp_path, capsys):
+    root = build(
+        tmp_path,
+        {".aiderignore": "hidden.py\n", "hidden.py": SOURCE, "src/app.py": SOURCE},
+    )
+
+    main([root, "--consumer", "aider", "--json"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["consumer"] == "aider"
+    assert payload["ignore_file"] == ".aiderignore"
+    assert payload["walk"]["consumer"] == "aider"
+    assert ".aiderignore" in payload["walk"]["ignore_files"]
+    assert payload["reduction"]["consumer"] == "aider"
+
+
+def test_python_m_entry_point_is_real():
+    root = pathlib.Path(__file__).resolve().parents[1]
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(root / "src")
+    run = subprocess.run(
+        [sys.executable, "-m", "contextcost", "--version"],
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+
+    assert run.returncode == 0, run.stderr
+    assert run.stdout.startswith("contextcost ")

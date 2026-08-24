@@ -47,7 +47,12 @@ def _badge(walk: WalkResult) -> str:
     """One shields.io badge URL for a README, with today's numbers baked in."""
     label = "context cost"
     message = f"{_fmt(walk.tokens)} tokens"
-    colour = "red" if walk.tokens > 500_000 else ("orange" if walk.tokens > 100_000 else "green")
+    if walk.tokens > 500_000:
+        colour = "red"
+    elif walk.tokens > 100_000:
+        colour = "orange"
+    else:
+        colour = "green"
     return (
         f"![{label}](https://img.shields.io/badge/"
         f"{label.replace(' ', '_')}-{message.replace(' ', '%20')}-{colour})"
@@ -63,14 +68,13 @@ def _header(walk: WalkResult, accurate=None) -> list[str]:
             else 0.0
         )
         inside = "within" if drift <= ERROR_BOUND else "**OUTSIDE**"
-        lines += [
-            (
-                f"**{_fmt(accurate.tokens):,} tokens** exact ({accurate.encoding}) to read "
-                f"this repository; the tokenizer-free estimate says "
-                f"{_fmt(walk.tokens)} (±{ERROR_BOUND:.0%}, {drift:.1%} {inside} its band)."
-            ),
-            "",
-        ]
+        exact = (
+            f"**{_fmt(accurate.tokens)} tokens** exact ({accurate.encoding})"
+            " to read this repository;"
+            f" the tokenizer-free estimate says {_fmt(walk.tokens)}"
+            f" (±{ERROR_BOUND:.0%}, {drift:.1%} {inside} its band)."
+        )
+        lines += [exact, ""]
     else:
         lines += [
             (

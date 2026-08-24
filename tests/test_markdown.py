@@ -30,7 +30,6 @@ def test_no_ansi_escapes_reach_a_pr_comment(tmp_path):
     text = render_markdown(walk, reduction)
 
     assert "\033[" not in text, "a terminal colour code would print literally"
-    assert "\u2588" not in text and "\u2192" not in text or True  # glyphs fine in md
 
 
 def test_headline_carries_the_error_bound(tmp_path):

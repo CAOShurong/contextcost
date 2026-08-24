@@ -37,8 +37,12 @@ methodology is the moat; everything below strengthens or distributes it.
 - [ ] GitHub Action `contextcost/action`: on pull_request, comment the
       delta ("this PR adds +41,882 tokens, 92 % of it a lockfile"). Needs
       `--json` first. This is the growth loop: every install markets the CLI.
-- [in-progress rev 6] `--json` machine output (stable schema, versioned) — prerequisite for
+- [done rev 6] `--json` machine output (stable schema, versioned) — prerequisite for
       the Action and for editor integrations.
+      (Shipped 3532dbc: `"schema": 1` in every payload, contract as data in
+      json_schema.CONTRACT walked against real output by tests, single
+      build_payload() assembly path, `--json-schema` prints the contract;
+      6 new tests, verified as an Action-style consumer on plotly.js.)
 - [ ] `--markdown` report suited for README badges / PR comments.
 
 ## P2 — agent-native surface

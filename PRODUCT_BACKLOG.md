@@ -43,7 +43,7 @@ methodology is the moat; everything below strengthens or distributes it.
       json_schema.CONTRACT walked against real output by tests, single
       build_payload() assembly path, `--json-schema` prints the contract;
       6 new tests, verified as an Action-style consumer on plotly.js.)
-- [ ] `--markdown` report suited for README badges / PR comments.
+- [in-progress rev 7] `--markdown` report suited for README badges / PR comments.
 
 ## P2 — agent-native surface
 

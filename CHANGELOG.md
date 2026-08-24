@@ -8,6 +8,19 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- A `--markdown` report: the same measurement as GitHub-flavoured Markdown,
+  for the two places this tool most needs to travel -- a pull-request comment
+  and a README. The terminal report pasted into a PR arrives as ANSI escape
+  codes, `?` glyphs and misaligned columns, so there is now a second renderer
+  that emits pipe tables, a blockquoted saving line and a fenced gitignore
+  block; `--badge` prepends a shields.io badge line with the measured total
+  baked in for README use. The honesty rules carry over intact: the estimate
+  is always printed with its ±14 % bound, the saving says it was measured by
+  walking the repository again rather than subtracted, and the tier the tool
+  cannot judge stays phrased as a question. Paths are escaped so a `|` in a
+  filename cannot break a table. Verified on plotly.js (63.2 M tokens walked,
+  the minified/dist/lockfile findings rendering as tables a collapsed PR
+  comment still shows).
 - A versioned `--json` schema (v1) with a printed key contract
   (`--json-schema`). The output existed but promised nothing: a key could
   change shape between releases and every script built on it would find out

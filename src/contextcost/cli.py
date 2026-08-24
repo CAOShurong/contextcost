@@ -29,6 +29,7 @@ from . import __version__
 from .estimate import ERROR_BOUND
 from .ignorefile import CONSUMERS, CONTEXTCOST_IGNORE_FILE, consumer_write_file
 from .json_schema import _contract_text, build_payload
+from .markdown import render_markdown
 from .reduce import reduce_repository
 from .report import render, supports_colour, supports_unicode
 from .walk import walk_repository
@@ -60,6 +61,19 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--json", action="store_true", help="machine-readable output (schema v1)"
+    )
+    parser.add_argument(
+        "--markdown",
+        action="store_true",
+        help=(
+            "GitHub-flavoured Markdown report, for PR comments and READMEs;"
+            " add --badge to prepend a shields.io badge line"
+        ),
+    )
+    parser.add_argument(
+        "--badge",
+        action="store_true",
+        help="with --markdown: prepend a README badge line for the total",
     )
     parser.add_argument(
         "--json-schema",
@@ -245,6 +259,16 @@ def main(argv: list[str] | None = None) -> int:
             accurate=accurate,
         )
         print(json.dumps(payload, indent=2))
+    elif args.markdown and not args.quiet:
+        print(
+            render_markdown(
+                walk,
+                reduction,
+                top=args.top,
+                accurate=accurate,
+                badge=args.badge,
+            ).rstrip()
+        )
     elif not args.quiet:
         colour = supports_colour() and not args.no_color
         print(

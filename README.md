@@ -248,6 +248,8 @@ contextcost                       # measure the current directory
 contextcost path/to/repo          # measure somewhere else
 contextcost --json                # machine-readable, schema v1, for scripts and CI
 contextcost --json-schema         # print the --json key contract
+contextcost --markdown            # GitHub-flavoured Markdown, for PR comments
+contextcost --markdown --badge    # ...with a shields.io badge line for a README
 contextcost --accurate            # exact counts via tiktoken (see below)
 contextcost --include-possible    # also act on large data files
 contextcost --consumer cursor     # include .cursorignore in the measurement

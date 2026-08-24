@@ -25,16 +25,19 @@ methodology is the moat; everything below strengthens or distributes it.
       exact number. NOTE discovered: numeric data dumps (JSON matrices,
       locale tables) drift up to 70% — estimator blind spot, needs a
       `numeric` class + recalibration (see new P0 entry).
-- [in-progress rev 5] `.contextcostignore` file: project-local ignores with comments,
+- [done rev 5] `.contextcostignore` file: project-local ignores with comments,
       merged with .gitignore semantics. `--emit-ignore` writes the proposal
       as this format so accepting a saving is one line.
+      (Shipped e6e6541: read for every consumer incl. --no-gitignore, applied
+      last so patterns win; 4 CLI tests + 4 ignorefile tests; verified on a
+      scratch repo and git check-ignore.)
 
 ## P1 — distribution
 
 - [ ] GitHub Action `contextcost/action`: on pull_request, comment the
       delta ("this PR adds +41,882 tokens, 92 % of it a lockfile"). Needs
       `--json` first. This is the growth loop: every install markets the CLI.
-- [ ] `--json` machine output (stable schema, versioned) — prerequisite for
+- [in-progress rev 6] `--json` machine output (stable schema, versioned) — prerequisite for
       the Action and for editor integrations.
 - [ ] `--markdown` report suited for README badges / PR comments.
 

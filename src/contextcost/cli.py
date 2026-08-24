@@ -28,6 +28,7 @@ import sys
 from . import __version__
 from .estimate import ERROR_BOUND
 from .ignorefile import CONSUMERS, CONTEXTCOST_IGNORE_FILE, consumer_write_file
+from .json_schema import _contract_text, build_payload
 from .reduce import reduce_repository
 from .report import render, supports_colour, supports_unicode
 from .walk import walk_repository
@@ -57,7 +58,17 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "path", nargs="?", default=".", help="repository to measure (default: .)"
     )
-    parser.add_argument("--json", action="store_true", help="machine-readable output")
+    parser.add_argument(
+        "--json", action="store_true", help="machine-readable output (schema v1)"
+    )
+    parser.add_argument(
+        "--json-schema",
+        action="store_true",
+        help=(
+            "print the --json key contract and exit; consumers should pin"
+            " 'schema' from the output and read this before relying on a key"
+        ),
+    )
     parser.add_argument(
         "--include-possible",
         action="store_true",
@@ -183,6 +194,9 @@ def _write_gitignore(root: str, reduction) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    if args.json_schema:
+        print(_contract_text())
+        return 0
     root = os.path.abspath(args.path)
     if not os.path.isdir(root):
         print(f"contextcost: not a directory: {args.path}", file=sys.stderr)
@@ -221,19 +235,15 @@ def main(argv: list[str] | None = None) -> int:
             return MISSING_DEPENDENCY_EXIT
 
     if args.json:
-        payload = {
-            "version": __version__,
-            "consumer": args.consumer,
-            "ignore_file": reduction.ignore_file,
-            "walk": walk.as_dict(),
-            "error_bound": ERROR_BOUND,
-            "by_directory": walk.by_directory(),
-            "by_extension": walk.by_extension(),
-            "largest": [c.as_dict() for c in walk.largest(args.top)],
-            "reduction": reduction.as_dict(),
-        }
-        if accurate is not None:
-            payload["accurate"] = accurate.as_dict()
+        payload = build_payload(
+            version=__version__,
+            consumer=args.consumer,
+            reduction=reduction,
+            walk=walk,
+            error_bound=ERROR_BOUND,
+            top=args.top,
+            accurate=accurate,
+        )
         print(json.dumps(payload, indent=2))
     elif not args.quiet:
         colour = supports_colour() and not args.no_color

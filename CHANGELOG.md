@@ -8,6 +8,18 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- A versioned `--json` schema (v1) with a printed key contract
+  (`--json-schema`). The output existed but promised nothing: a key could
+  change shape between releases and every script built on it would find out
+  in production. Now the document carries `"schema": 1`, the contract is data
+  (`json_schema.CONTRACT`) that the test suite walks against real output --
+  so documentation drifting from behaviour fails CI rather than a consumer's
+  parse -- and all assembly goes through one `build_payload()` that cannot
+  diverge from what the CLI prints. Stability rule: existing keys never change
+  meaning within a version; new optional keys may appear without a bump;
+  breaking changes bump to v2. Verified as an Action-style consumer against
+  plotly.js (63.2 M tokens walked, measured saving 26.2 M / 41 % parsed by
+  pinning `schema` alone). This unblocks the GitHub Action.
 - `.contextcostignore`, a project-local ignore file with `--emit-ignore` to
   write the proposal into it. The right exclusion for an AI context budget is
   often wrong everywhere else — a recorded test fixture should reach an agent

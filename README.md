@@ -246,7 +246,8 @@ repository, not a sum of what was dropped.
 ```console
 contextcost                       # measure the current directory
 contextcost path/to/repo          # measure somewhere else
-contextcost --json                # machine-readable, for scripts and CI
+contextcost --json                # machine-readable, schema v1, for scripts and CI
+contextcost --json-schema         # print the --json key contract
 contextcost --accurate            # exact counts via tiktoken (see below)
 contextcost --include-possible    # also act on large data files
 contextcost --consumer cursor     # include .cursorignore in the measurement
@@ -348,7 +349,7 @@ separately, and every dataclass has `as_dict()`.
 ## Development
 
 ```bash
-python -m pytest -q                      # 124 tests, no configuration needed
+python -m pytest -q                      # 138 tests, no configuration needed
 python -m ruff check src tests docs
 python docs/build_docs.py                # regenerate the figures and README
 python docs/build_docs.py --check        # CI fails if they are stale

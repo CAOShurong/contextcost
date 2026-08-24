@@ -320,7 +320,7 @@ separately, and every dataclass has `as_dict()`.
 ## Development
 
 ```bash
-python -m pytest -q                      # 110 tests, no configuration needed
+python -m pytest -q                      # 118 tests, no configuration needed
 python -m ruff check src tests docs
 python docs/build_docs.py                # regenerate the figures and README
 python docs/build_docs.py --check        # CI fails if they are stale

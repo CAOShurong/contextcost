@@ -86,11 +86,11 @@ That bound is measured, not asserted. `docs/calibrate.py` encodes a corpus with
 
 | | error vs. a real tokenizer |
 | --- | ---: |
-| median file | 2.6% |
-| 95th percentile | 10.0% |
-| whole corpus (what a repository total looks like) | 7.6% |
+| median file | 3.1% |
+| 95th percentile | 10.8% |
+| whole corpus (what a repository total looks like) | 6.3% |
 
-The bound the tool actually prints is **±12%**: the measured 95th percentile
+The bound the tool actually prints is **±14%**: the measured 95th percentile
 plus 20% headroom. The corpus is this repository's own files, so every commit
 changes it slightly, and a bound sitting exactly on the measurement would turn
 ordinary editing into a red build — where the tempting fix is to widen the
@@ -124,6 +124,24 @@ Simplified and traditional share a Unicode block, so they are told apart by
 looking for characters that exist only in the traditional set. Measured on
 prose: 27% of traditional Han characters trip that detector, and 0% of
 simplified ones.
+
+### Numeric data dumps are their own class
+
+Running `--accurate` against [plotly.js](https://github.com/plotly/plotly.js)
+exposed the estimator's next blind spot: it read 45 M tokens where the
+tokenizer said 64 M. The gap was not source code — it was recorded test
+fixtures and JSON number matrices, files whose bodies are thousands of small
+integers (`gl2d_parcoords_blocks.json` was under-counted by 71%). A byte-pair
+encoder merges digits poorly, so the more of a file is digits, the more
+tokens per character it costs — the opposite of what the code ratio assumed.
+
+Files that are mostly digits now form a `numeric` class with its own ratio,
+derived from the measured digit share. On plotly.js this took the whole-tree
+error from **29.4% to 1.2%**; on astropy from 20.8% to 12.6%; h5py and pandas,
+which have almost no such files, were unchanged. The class is conservative on
+purpose — a file qualifies only if it already looked like code, at least 10%
+of it is digits, letters are under 25%, and the digits outnumber the letters —
+so ordinary number-heavy source stays on the code path.
 
 For most of this project's life that bound read `±12%`, and it had been chosen
 rather than measured — the comment beside it cited a calibration script that
@@ -196,7 +214,7 @@ Nobody would call it bloated.
 ![Where the context budget goes](docs/breakdown.png)
 
 **37,603 tokens** to read 16 text files
-(estimated, ±12% — see below for why there is no tokenizer).
+(estimated, ±14% — see below for why there is no tokenizer).
 
 | file | tokens | rule | confidence |
 | --- | ---: | --- | --- |
@@ -234,7 +252,7 @@ python -m contextcost --version   # module entry point also works
 
 ## Exact counts: `--accurate`
 
-The default numbers are estimates with a measured ±12 % error bound, and for
+The default numbers are estimates with a measured ±14 % error bound, and for
 most decisions — "is this repo worth reading", "which files are the problem"
 — that is the right resolution. When a number will be quoted, `--accurate`
 counts with the real tokenizer:
@@ -320,7 +338,7 @@ separately, and every dataclass has `as_dict()`.
 ## Development
 
 ```bash
-python -m pytest -q                      # 118 tests, no configuration needed
+python -m pytest -q                      # 124 tests, no configuration needed
 python -m ruff check src tests docs
 python docs/build_docs.py                # regenerate the figures and README
 python docs/build_docs.py --check        # CI fails if they are stale

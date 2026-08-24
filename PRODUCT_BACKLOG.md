@@ -11,7 +11,7 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P0 — credibility & correctness
 
-- [ ] Estimator blind spot found by `--accurate` on plotly.js: numeric data
+- [done rev 4] Estimator blind spot found by `--accurate` on plotly.js: numeric data
       dumps (JSON number matrices, locale tables) are classified as `code`
       (4.14 chars/token) but really cost ~2.8 chars/token — per-file drift up
       to 74%, repo-wide drift 29%. Add a `numeric` content class (digit share

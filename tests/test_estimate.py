@@ -135,6 +135,73 @@ def test_prose_and_code_are_classified_apart():
     assert estimate_tokens(code).kind == "code"
 
 
+# A numeric data dump: thousands of small integers, the shape of a recorded
+# plotly.js fixture that started this class. Digits dominate, letters are
+# only the JSON scaffolding.
+_NUMERIC_MATRIX = (
+    "{\n"
+    + ",\n".join(
+        "  [" + ", ".join(str((i * 7 + j) % 10) for j in range(12)) + "]"
+        for i in range(80)
+    )
+    + "\n}"
+)
+
+
+def test_numeric_data_dump_is_its_own_class():
+    assert _NUMERIC_MATRIX.count("0") > 90
+    assert estimate_tokens(_NUMERIC_MATRIX).kind == "numeric"
+
+
+def test_numeric_data_costs_far_more_than_the_code_ratio_assumed():
+    """The regression this class exists for: charged at 4.14 chars/token, a
+    small-integer matrix under-counts by roughly a factor of three against
+    cl100k_base, because a byte-pair encoder merges digits poorly."""
+    naive_code = len(_NUMERIC_MATRIX) / 4.14
+    assert estimate_tokens(_NUMERIC_MATRIX).tokens > naive_code * 1.5
+
+
+def test_numeric_ratio_rises_as_digits_dominate_more():
+    sparse = "[1]" * 400
+    dense = "[" + ", ".join("7" for _ in range(800)) + "]"
+    per_char_sparse = estimate_tokens(sparse).tokens / len(sparse)
+    per_char_dense = estimate_tokens(dense).tokens / len(dense)
+    assert per_char_dense > per_char_sparse
+
+
+def test_number_heavy_but_word_shaped_source_stays_code():
+    """A test file full of coordinates is still prose-shaped to an agent if it
+    carries as many letters as digits; the third guard keeps it out of the
+    numeric class, where its words would be billed as if they were digits."""
+    code = (
+        "assert point.x == 100\nassert point.y == 200\n"
+        "result.append(compute(point, limit))\n" * 30
+    )
+    assert estimate_tokens(code).kind != "numeric"
+
+
+def test_prose_with_figures_is_never_numeric():
+    prose = (
+        "In 1997 the team measured 42 samples and reported a 3.4 percent shift. "
+        "The 2011 survey repeated this with 88 sites across 12 regions and the "
+        "follow-up studies across 205 fields confirmed the earlier findings in full. "
+        "A second independent analysis in 2014 revisited the original sites again. " * 8
+    )
+    assert estimate_tokens(prose).kind == "prose"
+
+
+def test_long_decimal_floats_do_not_overshoot():
+    """Long decimal fractions tokenize better than their digit share predicts,
+    which is what NUMERIC_MAX_RATIO caps. Without the cap this fixture family
+    over-counted by ~70%."""
+    floats = ",\n".join(f"{(i * 7919 % 20000) / 10000:.17g}" for i in range(300))
+    estimate = estimate_tokens(floats)
+    assert estimate.kind == "numeric"
+    # Capped at 2.2 chars/token; the real cost is about half that, but far
+    # above the 4.14 the old code path assumed.
+    assert len(floats) / estimate.tokens <= 2.21
+
+
 def test_opaque_content_costs_far_more_per_character_than_source():
     """Base64 has nothing for a byte-pair encoder to merge. Getting this
     backwards would under-count exactly the files the tool exists to find."""

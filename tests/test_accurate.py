@@ -19,6 +19,7 @@ pytest.importorskip(
 
 from contextcost.accurate import ACCURATE_ENCODING, count_repository, count_text
 from contextcost.cli import MISSING_DEPENDENCY_EXIT, main
+from contextcost.estimate import ERROR_BOUND
 
 FILLER = "The quick brown fox jumps over the lazy dog. " * 20
 # Deliberately shaped like real source -- varied lines, docstrings, real
@@ -103,7 +104,7 @@ def test_accurate_covers_exactly_the_walks_text_files(tmp_path):
 
 
 def test_estimated_lands_inside_its_band_on_this_corpus(tmp_path):
-    """The fixture corpus: the estimate must sit inside its stated ±12% band."""
+    """The fixture corpus: the estimate must sit inside its stated error band."""
     from contextcost.walk import walk_repository
 
     root = build(tmp_path, {"src/app.py": SOURCE, "README.md": FILLER})
@@ -111,7 +112,7 @@ def test_estimated_lands_inside_its_band_on_this_corpus(tmp_path):
     accurate = count_repository(walk)
 
     drift = abs(accurate.estimated_tokens - accurate.tokens) / accurate.tokens
-    assert drift <= 0.12
+    assert drift <= ERROR_BOUND
 
 
 def test_missing_file_between_walk_and_count_is_zero_and_sampled(tmp_path):
@@ -135,7 +136,7 @@ def test_cli_json_carries_both_numbers(tmp_path, capsys):
     exact = payload["accurate"]["tokens"]
     estimated = payload["walk"]["tokens"]
     assert exact > 0
-    assert abs(exact - estimated) / exact <= 0.12
+    assert abs(exact - estimated) / exact <= ERROR_BOUND
     # The reduction totals are still the estimator's; the exact block sits
     # beside them rather than replacing them.
     assert payload["reduction"]["before"] == estimated

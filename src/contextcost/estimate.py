@@ -52,7 +52,7 @@ __all__ = [
 #: An unmeasured bound presented as a measurement, inside the tool whose entire
 #: argument is against exactly that, is the most embarrassing defect this
 #: project has had, and it is recorded here rather than quietly corrected.
-ERROR_BOUND = 0.12
+ERROR_BOUND = 0.14
 
 #: Characters per token, measured over real files with ``docs/calibrate.py``,
 #: not chosen. See the module docstring for why one ratio cannot serve.
@@ -72,6 +72,42 @@ DENSE_OPAQUE_RATIO = 1.41
 #: Punctuation share separating the two. Measured, and the gap is wide: random
 #: base64 sits at 0.032, hex digests at 0.000, and real manifests at 0.104.
 DENSE_PUNCTUATION = 0.06
+
+#: The `numeric` class: numeric data dumps -- JSON number matrices, recorded
+#: fixture arrays, locale number tables. Found by running ``--accurate``
+#: against plotly.js, where the estimate read 45 M tokens and the tokenizer
+#: said 64 M; the gap was dominated by files like a parcoords fixture whose
+#: body is thousands of small integers, charged at the code ratio (4.14) but
+#: actually costing ~1.2 characters per token. Measured against cl100k_base,
+#: a byte-pair encoder merges digits poorly: random digit streams cost about
+#: one token per three characters, so the more of a file is digits, the lower
+#: its characters-per-token.
+#:
+#: A file qualifies when it was classified as code (so prose with figures and
+#: ordinary source are untouched), at least this share of it is digits...
+NUMERIC_MIN_DIGIT = 0.10
+
+#: ...and under this share is letters, so JSON keys and identifiers do not
+#: drag ordinary source files into the class...
+NUMERIC_MAX_ALPHA = 0.25
+
+#: ...and the digits outnumber the letters, which keeps number-heavy but
+#: still word-shaped test code out. All three bounds were swept over four
+#: real repositories (plotly.js, astropy, h5py, pandas); these are the values
+#: that minimised per-file regressions while fixing the drift.
+#:
+#: The ratio itself is one over the digit share, capped here. The cap exists
+#: because long decimal fractions ("0.04000000000000001") tokenize better than
+#: their digit share predicts -- the sign, dot and shared prefixes give the
+#: encoder something to merge -- so pure-digit extrapolation overshoots on
+#: them. 2.2 minimised regressions across the same four-repository sweep;
+#: below it, aggregate drift improves but individual long-decimal files get
+#: worse by more than the aggregate gains.
+NUMERIC_MAX_RATIO = 2.2
+
+#: Below this digit share, one-over-digit exceeds the cap anyway, so the file
+#: is simply charged NUMERIC_MAX_RATIO -- see :func:`_numeric_ratio`.
+NUMERIC_MIN_RATIO_DIGIT = 0.05
 
 #: Tokens per CJK character, by script. A CJK character is roughly one token,
 #: which is why a single constant survived so long -- but "roughly" hides a
@@ -168,6 +204,12 @@ def _classify(text: str) -> str:
     syntactically code and would otherwise be charged the code rate, which
     understates it by nearly a third -- and understating exactly the files
     this tool is meant to find would be the worst possible failure.
+    Numeric is checked next for the same reason in the opposite register:
+    numeric data dumps look like cheap code (letters, punctuation, digits --
+    all plausible source) but cost up to four times more per character than
+    the code ratio assumes, so they are under-counted, which is worse than
+    over-counting a documentation file by the same margin. Prose stays last
+    because its test is the most specific.
     """
     if not text:
         return "prose"
@@ -183,6 +225,41 @@ def _classify(text: str) -> str:
     if words / len(text) > 0.72 and punctuation / max(len(text), 1) < 0.06:
         return "prose"
     return "code"
+
+
+def _numeric_ratio(digit_share: float) -> float:
+    """Characters per token for a numeric file with this digit share.
+
+    One over the share, capped at :data:`NUMERIC_MAX_RATIO`: pure digits cost
+    about one token per three characters against ``cl100k_base``, and files
+    below the cap's break-even digit share are all close enough to it that
+    the cap itself is the better estimate.
+    """
+    return min(1.0 / max(digit_share, NUMERIC_MIN_RATIO_DIGIT), NUMERIC_MAX_RATIO)
+
+
+def _is_numeric(text: str, kind: str) -> bool:
+    """Whether a non-dense, non-prose text is a numeric data dump.
+
+    See the class constants above for where each bound came from. The shares
+    are of *all* characters, matching how :func:`_classify` measures, so a
+    file cannot drift into the class by whitespace alone.
+    """
+    if kind != "code":
+        return False
+    n = len(text)
+    digits = alpha = 0
+    for ch in text:
+        if ch.isdigit():
+            digits += 1
+        elif "a" <= ch <= "z" or "A" <= ch <= "Z":
+            alpha += 1
+    digit_share = digits / n
+    return (
+        digit_share >= NUMERIC_MIN_DIGIT
+        and alpha / n < NUMERIC_MAX_ALPHA
+        and digit_share >= alpha / n
+    )
 
 
 def _dense_ratio(text: str) -> float:
@@ -261,9 +338,16 @@ def estimate_tokens(text: str) -> Estimate:
     rest = len(text) - cjk
 
     kind = _classify(text)
-    ratio = {"prose": PROSE_RATIO, "code": CODE_RATIO, "dense": _dense_ratio(text)}[
-        kind
-    ]
+    if kind == "dense":
+        ratio = _dense_ratio(text)
+    elif _is_numeric(text, kind):
+        # A distinct reported class, not a sub-case of code: the report and
+        # the JSON output say `numeric`, so a reader can see which files the
+        # specialised ratio was applied to rather than taking it on faith.
+        kind = "numeric"
+        ratio = _numeric_ratio(sum(ch.isdigit() for ch in text) / len(text))
+    else:
+        ratio = {"prose": PROSE_RATIO, "code": CODE_RATIO}[kind]
 
     tokens = int(round(rest / ratio + _cjk_tokens(text)))
     return Estimate(max(tokens, 1 if text.strip() else 0), len(text), kind)

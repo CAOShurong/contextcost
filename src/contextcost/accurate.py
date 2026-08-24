@@ -1,7 +1,7 @@
 """Exact token counts, when somebody installs the tokenizer.
 
 The estimator in :mod:`contextcost.estimate` is deliberately tokenizer-free,
-and that stays the default: zero dependencies is a feature, and ±12% is
+and that stays the default: zero dependencies is a feature, and ±14% is
 accurate enough to answer "is this repo worth reading" and "which files are
 the problem". But some decisions are made at a different resolution. A GitHub
 Action commenting on a pull request does not want "roughly 40,000"; it wants

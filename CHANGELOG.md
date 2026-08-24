@@ -6,6 +6,23 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- A `numeric` content class for numeric data dumps — JSON number matrices,
+  recorded fixture arrays, locale number tables. Found by running `--accurate`
+  against plotly.js, where the estimator read 45 M tokens and the tokenizer
+  said 64 M; a byte-pair encoder merges digits poorly, so files dominated by
+  small integers cost up to four times more per character than the code ratio
+  assumed (`gl2d_parcoords_blocks.json` was under-counted by 71%). The class
+  is conservative: it applies only to code-classified files whose digit share
+  is at least 10%, whose letters are under 25%, and where digits outnumber
+  letters; the ratio is one over the digit share capped at 2.2, with every
+  bound swept across plotly.js, astropy, h5py and pandas to minimise
+  per-file regressions. Measured effect on whole-tree drift vs cl100k_base:
+  plotly.js 29.4% → 1.2%, astropy 20.8% → 12.6%; h5py and pandas unchanged.
+- `ERROR_BOUND` re-measured after the change: ±12% → ±14% (95th percentile
+  10.8% plus the usual headroom), via `docs/calibrate.py`.
+
 ## [0.3.0] - 2026-08-24
 
 ### Added

@@ -15,7 +15,7 @@ most of the others, so there is no way to measure against every model an agent
 might use. Byte-pair encoders trained on similar corpora land close to one
 another on ordinary text, but "close" is doing real work in that sentence: the
 bound below is measured against one public tokenizer and is a proxy for the
-rest. That is a weaker claim than "±12%" looks, and it is the reason this
+rest. That is a weaker claim than "±14%" looks, and it is the reason this
 paragraph exists rather than living in a footnote.
 
 The corpus is this repository's own source, tests, tooling and prose, plus

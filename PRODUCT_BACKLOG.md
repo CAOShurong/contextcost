@@ -43,7 +43,12 @@ methodology is the moat; everything below strengthens or distributes it.
       json_schema.CONTRACT walked against real output by tests, single
       build_payload() assembly path, `--json-schema` prints the contract;
       6 new tests, verified as an Action-style consumer on plotly.js.)
-- [in-progress rev 7] `--markdown` report suited for README badges / PR comments.
+- [done rev 7] `--markdown` report suited for README badges / PR comments.
+      (Shipped db9e959: `src/contextcost/markdown.py` second renderer — pipe
+      tables, blockquoted saving, fenced gitignore block, `--badge` prepends
+      a shields.io badge line; honesty rules carried over (bound, measured
+      saving, deferred as question); pipes in paths escaped; 10 new tests;
+      verified on this repo (63k tokens + badge) and plotly.js (63.2M).)
 
 ## P2 — agent-native surface
 

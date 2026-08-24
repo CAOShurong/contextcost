@@ -254,3 +254,60 @@ def test_python_m_entry_point_is_real():
 
     assert run.returncode == 0, run.stderr
     assert run.stdout.startswith("contextcost ")
+
+
+def test_emit_ignore_writes_contextcostignore_and_leaves_git_alone(tmp_path, capsys):
+    """--emit-ignore is the one-line way to accept a saving: the patterns go
+    into a file only contextcost reads, so Git's tracking and every other
+    tool's behaviour are untouched."""
+    root = build(
+        tmp_path, {".gitignore": "*.pyc\n", "yarn.lock": FILLER, "src/app.py": SOURCE}
+    )
+
+    assert main([root, "--no-color", "--emit-ignore"]) == 1
+
+    written = (tmp_path / ".contextcostignore").read_text(encoding="utf-8")
+    assert "# Added by contextcost" in written
+    assert "/yarn.lock" in written
+    # The VCS input survived byte for byte.
+    assert (tmp_path / ".gitignore").read_text(encoding="utf-8") == "*.pyc\n"
+    assert "Appended 1 pattern(s)" in capsys.readouterr().out
+
+
+def test_emit_ignore_changes_the_next_measurement(tmp_path, capsys):
+    """Accepting the proposal has to actually move the number -- otherwise the
+    flag writes decoration rather than an ignore file."""
+    root = build(tmp_path, {"yarn.lock": FILLER, "src/app.py": SOURCE})
+
+    main([root, "--json"])
+    before = json.loads(capsys.readouterr().out)["walk"]["tokens"]
+    # --json would override --quiet, so the accepting run passes neither.
+    main([root, "--emit-ignore", "--quiet"])
+
+    main([root, "--json"])
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["walk"]["tokens"] < before
+    assert ".contextcostignore" in payload["walk"]["ignore_files"]
+
+
+def test_emit_ignore_is_reported_as_its_own_destination(tmp_path, capsys):
+    root = build(tmp_path, {"yarn.lock": FILLER, "src/app.py": SOURCE})
+    main([root, "--emit-ignore", "--quiet"])
+
+    # A new offender arrives; the next report must point at the file the
+    # flagged run will actually write, with its own flag.
+    (tmp_path / "poetry.lock").write_text(FILLER, encoding="utf-8")
+    main([root, "--no-color", "--emit-ignore"])
+    out = capsys.readouterr().out
+    assert ".contextcostignore (or run with --emit-ignore)" in out
+
+
+def test_emit_ignore_deduplicates_on_a_second_run(tmp_path, capsys):
+    root = build(tmp_path, {"yarn.lock": FILLER, "src/app.py": SOURCE})
+    main([root, "--emit-ignore", "--quiet"])
+    first = (tmp_path / ".contextcostignore").read_text(encoding="utf-8")
+
+    # With the lockfile now hidden behind .contextcostignore there is nothing
+    # left to propose; the second run must not duplicate the block.
+    assert main([root, "--emit-ignore", "--quiet"]) == 0
+    assert (tmp_path / ".contextcostignore").read_text(encoding="utf-8") == first

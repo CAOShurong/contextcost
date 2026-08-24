@@ -25,7 +25,7 @@ methodology is the moat; everything below strengthens or distributes it.
       exact number. NOTE discovered: numeric data dumps (JSON matrices,
       locale tables) drift up to 70% — estimator blind spot, needs a
       `numeric` class + recalibration (see new P0 entry).
-- [ ] `.contextcostignore` file: project-local ignores with comments,
+- [in-progress rev 5] `.contextcostignore` file: project-local ignores with comments,
       merged with .gitignore semantics. `--emit-ignore` writes the proposal
       as this format so accepting a saving is one line.
 

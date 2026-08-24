@@ -8,6 +8,16 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `.contextcostignore`, a project-local ignore file with `--emit-ignore` to
+  write the proposal into it. The right exclusion for an AI context budget is
+  often wrong everywhere else — a recorded test fixture should reach an agent
+  and stay tracked by Git — and pushing contextcost's proposal into
+  `.gitignore` or a consumer's file would change other tools' behaviour to get
+  a smaller token count. This file is read for every consumer, even under
+  `--no-gitignore`, and its patterns are applied last so they win over every
+  earlier input, including via `!` re-inclusion. Accepting a measured saving
+  is now one command that cannot leak side effects outside this tool's own
+  measurement.
 - A `numeric` content class for numeric data dumps — JSON number matrices,
   recorded fixture arrays, locale number tables. Found by running `--accurate`
   against plotly.js, where the estimator read 45 M tokens and the tokenizer

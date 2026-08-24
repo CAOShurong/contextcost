@@ -171,6 +171,15 @@ proposal. `--write-ignore` targets the selected consumer's native ignore file;
 Write mode refuses a symbolic-link destination instead of following it beyond
 the repository boundary.
 
+**`.contextcostignore` — exclusions that belong to the measurement alone.**
+The right exclusion for an AI context budget is often wrong everywhere else: a
+recorded test fixture should reach an agent and stay tracked by Git.
+`contextcost --emit-ignore` writes the verified proposal into this
+project-local file, which contextcost reads for every consumer (even with
+`--no-gitignore`) and applies **last**, so its patterns win — including `!`
+re-inclusions, if you want to rescue files from a broader rule. Accepting a
+saving is one command and changes nothing outside this tool's own measurement.
+
 **It does not reproduce a live product's prompt or bill.** Consumer profiles
 model documented ignore-file inputs: the set of text files eligible for
 context. They do not reproduce semantic retrieval, repo maps, compression,
@@ -244,6 +253,7 @@ contextcost --consumer cursor     # include .cursorignore in the measurement
 contextcost --consumer aider      # include .aiderignore in the measurement
 contextcost --consumer repomix    # include Repomix's documented ignore files
 contextcost --consumer cursor --write-ignore  # append to .cursorignore
+contextcost --emit-ignore         # append to .contextcostignore (this tool only)
 contextcost --write-gitignore     # explicit legacy .gitignore destination
 contextcost --no-gitignore        # count files git would hide
 contextcost --top 20              # more rows per section

@@ -27,7 +27,7 @@ import sys
 
 from . import __version__
 from .estimate import ERROR_BOUND
-from .ignorefile import CONSUMERS, consumer_write_file
+from .ignorefile import CONSUMERS, CONTEXTCOST_IGNORE_FILE, consumer_write_file
 from .reduce import reduce_repository
 from .report import render, supports_colour, supports_unicode
 from .walk import walk_repository
@@ -93,6 +93,15 @@ def _parser() -> argparse.ArgumentParser:
         "--write-gitignore",
         action="store_true",
         help="append the verified proposal to .gitignore (backward-compatible)",
+    )
+    write.add_argument(
+        "--emit-ignore",
+        action="store_true",
+        help=(
+            "append the verified proposal to .contextcostignore, this tool's "
+            "own project-local ignore file -- it changes only what contextcost "
+            "measures, never what Git tracks or another tool reads"
+        ),
     )
     parser.add_argument(
         "--accurate",
@@ -191,6 +200,10 @@ def main(argv: list[str] | None = None) -> int:
         # The legacy flag is an explicit destination override. Keep the
         # report and JSON aligned with the file that will actually be written.
         reduction.ignore_file = ".gitignore"
+    elif args.emit_ignore:
+        reduction.ignore_file = CONTEXTCOST_IGNORE_FILE
+    elif args.write_ignore:
+        reduction.ignore_file = consumer_write_file(args.consumer)
 
     accurate = None
     if args.accurate:
@@ -235,9 +248,15 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
 
-    if args.write_gitignore or args.write_ignore:
+    if args.write_gitignore or args.write_ignore or args.emit_ignore:
         ignore_file = (
-            ".gitignore" if args.write_gitignore else consumer_write_file(args.consumer)
+            ".gitignore"
+            if args.write_gitignore
+            else (
+                CONTEXTCOST_IGNORE_FILE
+                if args.emit_ignore
+                else consumer_write_file(args.consumer)
+            )
         )
         try:
             message = (

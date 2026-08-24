@@ -32,6 +32,7 @@ import sys
 
 from .classify import by_rule
 from .estimate import ERROR_BOUND
+from .ignorefile import CONTEXTCOST_IGNORE_FILE
 from .reduce import Reduction
 from .walk import WalkResult
 
@@ -365,11 +366,12 @@ def _saving(reduction: Reduction, ink: _Ink, accurate=None) -> list[str]:
         lines.append(ink("  never proposed, so exact paths are used instead.", "dim"))
 
     lines.append("")
-    flag = (
-        "--write-gitignore"
-        if reduction.ignore_file == ".gitignore"
-        else "--write-ignore"
-    )
+    if reduction.ignore_file == ".gitignore":
+        flag = "--write-gitignore"
+    elif reduction.ignore_file == CONTEXTCOST_IGNORE_FILE:
+        flag = "--emit-ignore"
+    else:
+        flag = "--write-ignore"
     lines.append(ink(f"  Add to {reduction.ignore_file} (or run with {flag}):", "dim"))
     for pattern in reduction.patterns[:12]:
         lines.append("    " + ink(pattern, "cyan"))

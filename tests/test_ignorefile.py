@@ -12,7 +12,9 @@ from __future__ import annotations
 
 from contextcost.ignorefile import (
     ALWAYS_SKIP,
+    CONTEXTCOST_IGNORE_FILE,
     IgnoreRules,
+    active_ignore_files,
     load_ignore_rules,
     parse_ignore,
 )
@@ -177,3 +179,57 @@ def test_load_ignore_rules_with_use_gitignore_false_returns_no_rules(tmp_path):
 def test_load_ignore_rules_with_no_gitignore_file_returns_no_rules(tmp_path):
     loaded = load_ignore_rules(str(tmp_path))
     assert len(loaded) == 0
+
+
+# -- .contextcostignore: project-local ignores with last-word semantics ------
+
+
+def test_contextcostignore_is_read_for_every_consumer(tmp_path):
+    (tmp_path / ".gitignore").write_text("fixtures/\n", encoding="utf-8")
+    (tmp_path / CONTEXTCOST_IGNORE_FILE).write_text("docs/generated.md\n")
+    loaded = load_ignore_rules(str(tmp_path), consumer="cursor")
+
+    assert loaded.ignored("docs/generated.md")
+    assert CONTEXTCOST_IGNORE_FILE in active_ignore_files(
+        str(tmp_path), consumer="cursor"
+    )
+
+
+def test_contextcostignore_patterns_win_over_earlier_inputs(tmp_path):
+    """The merge is concatenation with this file at the tail, so git's
+    last-matching-pattern-wins gives its lines the final say -- including a
+    `!` re-inclusion that undoes what .gitignore hid."""
+    (tmp_path / ".gitignore").write_text("*.log\n", encoding="utf-8")
+    (tmp_path / CONTEXTCOST_IGNORE_FILE).write_text("!keep.log\n", encoding="utf-8")
+
+    loaded = load_ignore_rules(str(tmp_path))
+    assert loaded.ignored("other.log")
+    assert not loaded.ignored("keep.log")
+
+
+def test_active_ignore_files_orders_contextcostignore_last(tmp_path):
+    (tmp_path / ".gitignore").write_text("")
+    (tmp_path / ".aiderignore").write_text("")
+    (tmp_path / CONTEXTCOST_IGNORE_FILE).write_text("")
+
+    assert active_ignore_files(str(tmp_path), consumer="aider") == [
+        ".gitignore",
+        ".aiderignore",
+        CONTEXTCOST_IGNORE_FILE,
+    ]
+
+
+def test_contextcostignore_is_read_even_when_gitignore_semantics_are_off(tmp_path):
+    """--no-gitignore asks what a repository looks like to a tool with no
+    ignore inputs at all; this file is *this* tool's own input, so it still
+    applies. Otherwise accepting a proposal via --emit-ignore could never
+    change a --no-gitignore measurement, and the flag would lie."""
+    (tmp_path / CONTEXTCOST_IGNORE_FILE).write_text("data/\n", encoding="utf-8")
+
+    assert load_ignore_rules(
+        str(tmp_path), use_gitignore=False
+    ).ignored("data/big.csv")
+    # ...and it is listed as an input even then.
+    assert active_ignore_files(str(tmp_path), use_gitignore=False) == [
+        CONTEXTCOST_IGNORE_FILE
+    ]

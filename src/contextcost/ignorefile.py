@@ -36,6 +36,7 @@ from dataclasses import dataclass, field
 
 __all__ = [
     "CONSUMERS",
+    "CONTEXTCOST_IGNORE_FILE",
     "IgnoreRules",
     "Pattern",
     "active_ignore_files",
@@ -66,6 +67,21 @@ _CONSUMER_WRITE_FILES = {
     "repomix": ".repomixignore",
 }
 
+#: This tool's own project-local ignore file, read for every consumer and even
+#: under ``use_gitignore=False``. It exists because the right exclusion for an
+#: AI context budget is often the wrong exclusion everywhere else: a large
+#: recorded fixture belongs in front of an agent and out of no one's VCS, and
+#: pushing contextcost's proposal into ``.gitignore`` would change what Git
+#: tracks to get a smaller token count. Keeping the decision in a file only
+#: this tool reads means accepting a saving cannot leak side effects.
+#:
+#: It is applied **last**, so its patterns win over every consumer input --
+#: including a ``!`` re-inclusion, which lets a repository say "the generic
+#: rules hide ``fixtures/``, but agents still need it" in one line. That
+#: ordering is the merge semantics: git's last-matching-pattern-wins over a
+#: concatenated list whose tail is this file.
+CONTEXTCOST_IGNORE_FILE = ".contextcostignore"
+
 CONSUMERS = tuple(_CONSUMER_IGNORE_FILES)
 
 
@@ -86,15 +102,25 @@ def consumer_write_file(consumer: str) -> str:
 
 
 def active_ignore_files(
-    root: str, *, use_gitignore: bool = True, consumer: str = "generic"
+    root: str,
+    *,
+    use_gitignore: bool = True,
+    consumer: str = "generic",
 ) -> list[str]:
-    """List existing root-level ignore inputs in their application order."""
+    """List existing root-level ignore inputs in their application order.
+
+    ``.contextcostignore``, when present, is always last so its patterns win.
+    """
     consumer_files = tuple(
         relative
         for relative in _consumer_files(consumer)
         if use_gitignore or relative != ".git/info/exclude"
     )
-    candidates = ((".gitignore",) if use_gitignore else ()) + consumer_files
+    candidates = (
+        (".gitignore",) if use_gitignore else ()
+    ) + consumer_files + (
+        CONTEXTCOST_IGNORE_FILE,  # applied last, wins over everything above
+    )
     active = []
     for relative in candidates:
         if relative not in active and os.path.isfile(os.path.join(root, relative)):

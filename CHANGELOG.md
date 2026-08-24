@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-24
+
+### Added
+
+- `--accurate` mode: exact token counts via tiktoken, installed as the
+  optional extra `contextcost[accurate]`. The zero-dependency estimate stays
+  the default and stays on screen beside the exact figure — including a
+  statement of whether it landed inside its measured ±12 % band. Sampling
+  above 2 MB is unchanged and still marked. Without tiktoken installed the
+  flag exits with code 3 and an install hint rather than pretending.
+  Measured against plotly.js (45 M estimated / 64 M exact), where the gap is
+  dominated by numeric data dumps the character-class estimator under-charges;
+  that divergence is now visible per run instead of silent.
+
 ## [0.2.0] - 2026-08-11
 
 ### Added

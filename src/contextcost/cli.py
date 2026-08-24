@@ -34,6 +34,11 @@ from .walk import walk_repository
 
 __all__ = ["main"]
 
+#: Exit code for ``--accurate`` without the optional dependency. Distinct from
+#: ``2`` (usage / IO errors) so a CI job can tell "this run could not be
+#: exact" from "the repository was not measurable".
+MISSING_DEPENDENCY_EXIT = 3
+
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -88,6 +93,14 @@ def _parser() -> argparse.ArgumentParser:
         "--write-gitignore",
         action="store_true",
         help="append the verified proposal to .gitignore (backward-compatible)",
+    )
+    parser.add_argument(
+        "--accurate",
+        action="store_true",
+        help=(
+            "exact counts via tiktoken (install with "
+            "'pip install contextcost[accurate]'); the estimate stays shown"
+        ),
     )
     parser.add_argument(
         "--top", type=int, default=5, help="rows per section (default: 5)"
@@ -179,6 +192,21 @@ def main(argv: list[str] | None = None) -> int:
         # report and JSON aligned with the file that will actually be written.
         reduction.ignore_file = ".gitignore"
 
+    accurate = None
+    if args.accurate:
+        try:
+            from .accurate import count_repository
+
+            accurate = count_repository(walk)
+        except ImportError:
+            print(
+                "contextcost: --accurate needs the optional tokenizer.\n"
+                "  install it with: pip install 'contextcost[accurate]'\n"
+                "(the default estimate is unchanged and still shown without it)",
+                file=sys.stderr,
+            )
+            return MISSING_DEPENDENCY_EXIT
+
     if args.json:
         payload = {
             "version": __version__,
@@ -191,6 +219,8 @@ def main(argv: list[str] | None = None) -> int:
             "largest": [c.as_dict() for c in walk.largest(args.top)],
             "reduction": reduction.as_dict(),
         }
+        if accurate is not None:
+            payload["accurate"] = accurate.as_dict()
         print(json.dumps(payload, indent=2))
     elif not args.quiet:
         colour = supports_colour() and not args.no_color
@@ -201,6 +231,7 @@ def main(argv: list[str] | None = None) -> int:
                 colour=colour,
                 top=args.top,
                 unicode_ok=supports_unicode(),
+                accurate=accurate,
             )
         )
 

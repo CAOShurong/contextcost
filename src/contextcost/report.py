@@ -37,6 +37,11 @@ from .walk import WalkResult
 
 __all__ = ["render", "supports_colour", "supports_unicode"]
 
+#: Text shown when accurate counts are on but the encoder could not be
+#: reached mid-run. Never expected; kept so the slot is honest rather than
+#: silently blank.
+_ACCURATE_UNAVAILABLE = "unavailable"
+
 #: Drawing characters, and the plain-ASCII fallback used when the terminal
 #: cannot encode them. This is not a nicety: the first Windows console this ran
 #: in was cp936, where every block and arrow came out as `?`, turning the bar
@@ -141,19 +146,51 @@ def _plural(count: int, word: str) -> str:
     return f"{count} {_PLURALS.get(word, word + 's')}"
 
 
-def _header(walk: WalkResult, ink: _Ink) -> list[str]:
-    lines = [
-        "",
-        ink("contextcost", "bold") + ink(f"  {walk.root}", "dim"),
-        "",
-        "  "
-        + ink(f"{walk.tokens:,} tokens", "bold")
-        + " to read this repository"
-        + ink(
-            f"   {ink.glyph['plusminus']}{ERROR_BOUND:.0%} estimated, no tokenizer",
-            "dim",
-        ),
-    ]
+def _header(walk: WalkResult, ink: _Ink, accurate=None) -> list[str]:
+    if accurate is not None:
+        # Both numbers, always. The estimate keeps its band even beside an
+        # exact figure -- the pair is what lets a reader check the estimator
+        # instead of taking it on faith.
+        drift = (
+            abs(accurate.tokens - walk.tokens) / accurate.tokens
+            if accurate.tokens
+            else 0.0
+        )
+        inside = "within" if drift <= ERROR_BOUND else "OUTSIDE"
+        lines = [
+            "",
+            ink("contextcost", "bold") + ink(f"  {walk.root}", "dim"),
+            "",
+            "  "
+            + ink(f"{walk.tokens:,} tokens", "bold")
+            + " to read this repository"
+            + ink(
+                f"   {ink.glyph['plusminus']}{ERROR_BOUND:.0%} estimated",
+                "dim",
+            ),
+            "  "
+            + ink(f"{accurate.tokens:,} tokens", "bold", "green")
+            + " exact ("
+            + f"{accurate.encoding}"
+            + ink(
+                f"; estimate {drift:.1%} {inside} its "
+                f"{ink.glyph['plusminus']}{ERROR_BOUND:.0%} band)",
+                "dim",
+            ),
+        ]
+    else:
+        lines = [
+            "",
+            ink("contextcost", "bold") + ink(f"  {walk.root}", "dim"),
+            "",
+            "  "
+            + ink(f"{walk.tokens:,} tokens", "bold")
+            + " to read this repository"
+            + ink(
+                f"   {ink.glyph['plusminus']}{ERROR_BOUND:.0%} estimated, no tokenizer",
+                "dim",
+            ),
+        ]
     counts = [
         _plural(len(walk.text_files), "text file"),
         f"{_plural(len(walk.binary_files), 'binary')} not counted",
@@ -197,11 +234,20 @@ def _breakdown(walk: WalkResult, ink: _Ink, depth: int = 1) -> list[str]:
     return lines
 
 
-def _largest(walk: WalkResult, ink: _Ink, top: int) -> list[str]:
+def _largest(walk: WalkResult, ink: _Ink, top: int, accurate=None) -> list[str]:
     files = walk.largest(top)
     if not files:
         return []
     lines = _section("LARGEST FILES", ink)
+    if accurate is not None:
+        exact_by_path = {f.path: f for f in accurate.files}
+        lines.append(ink("       estimate      exact", "dim"))
+        for cost in files:
+            note = ink("  sampled", "dim") if cost.sampled else ""
+            exact = exact_by_path.get(cost.path)
+            shown = f"{exact.tokens:,}" if exact else _ACCURATE_UNAVAILABLE
+            lines.append(f"  {cost.tokens:>9,}  {shown:>9}  {cost.path[:48]}{note}")
+        return lines
     for cost in files:
         note = ink("  sampled", "dim") if cost.sampled else ""
         lines.append(f"  {cost.tokens:>9,}  {cost.path[:56]}{note}")
@@ -265,7 +311,7 @@ def _deferred(reduction: Reduction, ink: _Ink) -> list[str]:
     return lines
 
 
-def _saving(reduction: Reduction, ink: _Ink) -> list[str]:
+def _saving(reduction: Reduction, ink: _Ink, accurate=None) -> list[str]:
     lines = _section("SAVING", ink)
     if not reduction.patterns:
         lines.append(
@@ -296,6 +342,15 @@ def _saving(reduction: Reduction, ink: _Ink) -> list[str]:
         )
     )
     lines.append(ink("  not by subtracting what was dropped.", "dim"))
+    if accurate is not None:
+        lines.append(
+            ink(
+                f"  Token figures are estimates ({accurate.encoding} exact total: "
+                f"{accurate.tokens:,}); the saving is a difference of two walks,",
+                "dim",
+            )
+        )
+        lines.append(ink("  so it is exact in files even where counts are not.", "dim"))
 
     if reduction.narrowed_from:
         lines.append("")
@@ -345,16 +400,22 @@ def render(
     colour: bool = True,
     top: int = 5,
     unicode_ok: bool = True,
+    accurate=None,
 ) -> str:
-    """The whole report, as one string."""
+    """The whole report, as one string.
+
+    ``accurate`` is an :class:`contextcost.accurate.AccurateResult` when exact
+    counts were asked for; the report then shows both numbers everywhere a
+    total appears, and never the exact one alone.
+    """
     ink = _Ink(colour, unicode_ok)
     lines: list[str] = []
-    lines += _header(walk, ink)
+    lines += _header(walk, ink, accurate)
     lines += _breakdown(walk, ink)
-    lines += _largest(walk, ink, top)
+    lines += _largest(walk, ink, top, accurate)
     lines += _findings(reduction, ink, top)
     lines += _deferred(reduction, ink)
-    lines += _saving(reduction, ink)
+    lines += _saving(reduction, ink, accurate)
     lines += _unreadable(walk, ink)
     lines.append("")
     return "\n".join(lines)

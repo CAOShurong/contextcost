@@ -220,6 +220,7 @@ repository, not a sum of what was dropped.
 contextcost                       # measure the current directory
 contextcost path/to/repo          # measure somewhere else
 contextcost --json                # machine-readable, for scripts and CI
+contextcost --accurate            # exact counts via tiktoken (see below)
 contextcost --include-possible    # also act on large data files
 contextcost --consumer cursor     # include .cursorignore in the measurement
 contextcost --consumer aider      # include .aiderignore in the measurement
@@ -230,6 +231,34 @@ contextcost --no-gitignore        # count files git would hide
 contextcost --top 20              # more rows per section
 python -m contextcost --version   # module entry point also works
 ```
+
+## Exact counts: `--accurate`
+
+The default numbers are estimates with a measured ±12 % error bound, and for
+most decisions — "is this repo worth reading", "which files are the problem"
+— that is the right resolution. When a number will be quoted, `--accurate`
+counts with the real tokenizer:
+
+```console
+pip install 'contextcost[accurate]'
+contextcost --accurate
+```
+
+Three things stay true when it is on:
+
+- **Both numbers are shown.** The estimate keeps its band beside the exact
+  figure, and the report says whether the estimate landed inside it. A tool
+  that prints only exact numbers is asking you to forget it was ever wrong.
+- **Sampling stays sampling.** Files above 2 MB are still extrapolated from a
+  prefix and marked `sampled`, rather than spending seconds being precise
+  about one big file.
+- **Zero dependencies stays the default.** tiktoken is never imported unless
+  you pass the flag; without it installed, `--accurate` exits with code 3 and
+  the install hint.
+
+Measured on this repository itself, estimate and exact agree within 1 %. On
+repositories full of numeric data dumps they can diverge far more — which is
+exactly the kind of thing running `--accurate` once will tell you.
 
 ## Consumer-native ignore files
 

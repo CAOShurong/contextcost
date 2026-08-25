@@ -8,6 +8,19 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Full independent re-verification of the published case-study numbers
+  (2026-08-26): all eleven repositories re-run live with v0.5.1 `--json` on
+  the local checkouts at the commits cited in the posts — every figure in
+  both case studies reproduces exactly (buildkit 89.5%, lazygit 77.8%,
+  bat 55.8%, uv 51.1%, ruff 50.2% … yq 0.7%; plotly.js 63,831,059 →
+  37,008,917 tokens, 42.0% measured saving), with one upstream-drift
+  exception: gitleaks total moved 301,132 → 300,980 tokens (−152) while its
+  share stayed 33.8%. LibreChat engagement drafts rewritten against the
+  current state of PR #15089 (the old draft's accounting question is now
+  answered by the PR body; new draft engages with the summary-boundary
+  contract and asks about unbounded summary growth). Still not posted;
+  external posting requires user approval.
+
 - Social preview card (`docs/assets/social-card.png`, 1280×640): a real
   plotly.js measurement (63.8M tokens in, 42% measured saving) rendered as the
   `og:image` / `twitter:card` of the landing page, so pasting the link into

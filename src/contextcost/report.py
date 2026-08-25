@@ -32,7 +32,9 @@ import sys
 
 from .classify import by_rule
 from .estimate import ERROR_BOUND
-from .ignorefile import CONTEXTCOST_IGNORE_FILE  # noqa: F401 -- re-exported for consumers
+from .ignorefile import (
+    CONTEXTCOST_IGNORE_FILE,  # noqa: F401 -- re-exported for consumers
+)
 from .reduce import Reduction
 from .walk import WalkResult
 
@@ -367,7 +369,10 @@ def _saving(reduction: Reduction, ink: _Ink, accurate=None) -> list[str]:
 
     lines.append("")
     lines.append(
-        ink(f"  Add to {reduction.ignore_file} (or run with {reduction.write_flag}):", "dim")
+        ink(
+            f"  Add to {reduction.ignore_file} (or run with {reduction.write_flag}):",
+            "dim",
+        )
     )
     for pattern in reduction.patterns[:12]:
         lines.append("    " + ink(pattern, "cyan"))

@@ -249,20 +249,16 @@ def test_an_unknown_rule_name_raises(tmp_path):
 # every platform, so CI's Linux runner exercises them too.
 
 import ntpath  # noqa: E402
-
 import os  # noqa: E402
 
 from contextcost.classify import (  # noqa: E402
     BUILD_OUTPUT,
     LARGE_DATA,
-    LARGE_DATA_TOKENS,
     LOCKFILE,
     MINIFIED,
-    MIN_REPORTABLE_TOKENS,
     SNAPSHOT,
     VENDORED,
     _segments,
-    classify,
 )
 from contextcost.walk import FileCost, WalkResult  # noqa: E402
 

@@ -34,6 +34,16 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done rev 156] Distribution release v0.5.1: the rewritten README (plotly.js
+      hero + `uvx` one-liner) and CLI next-steps hook existed only on main —
+      the PyPI landing page still showed the old mechanism-first text.
+      Tagged `v0.5.1`, release workflow green end-to-end, verified live on
+      PyPI (`latest: 0.5.1`). Also: LibreChat engagement research —
+      "contextcost" in their tracker matches *their own* Context Cost UI
+      feature, not us; adjacent open thread is #15089 (Manual Context
+      Compaction). Unposted comment drafts prepared in
+      docs/engagement/librechat-drafts.md; external posting needs user
+      approval.
 - [done rev 155] `--delta` accepts a git revision as BASE (`contextcost .
       --delta main`): the ref is exported via `git archive` into a temp tree
       removed at exit, so measuring a PR's cost needs no second clone.

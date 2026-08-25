@@ -34,7 +34,7 @@ import re
 from dataclasses import dataclass, field
 
 from .classify import Finding, classify
-from .ignorefile import consumer_write_file
+from .ignorefile import CONTEXTCOST_IGNORE_FILE, consumer_write_file
 from .walk import FileCost, WalkResult, walk_repository
 
 __all__ = ["Reduction", "propose_patterns", "reduce_repository"]
@@ -87,6 +87,15 @@ class Reduction:
     @property
     def deferred_tokens(self) -> int:
         return sum(f.tokens for f in self.deferred)
+
+    @property
+    def write_flag(self) -> str:
+        """The CLI flag that writes the proposal to ``ignore_file``."""
+        if self.ignore_file == ".gitignore":
+            return "--write-gitignore"
+        if self.ignore_file == CONTEXTCOST_IGNORE_FILE:
+            return "--emit-ignore"
+        return "--write-ignore"
 
     def as_dict(self) -> dict:
         return {

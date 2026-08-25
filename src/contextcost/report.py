@@ -32,7 +32,7 @@ import sys
 
 from .classify import by_rule
 from .estimate import ERROR_BOUND
-from .ignorefile import CONTEXTCOST_IGNORE_FILE
+from .ignorefile import CONTEXTCOST_IGNORE_FILE  # noqa: F401 -- re-exported for consumers
 from .reduce import Reduction
 from .walk import WalkResult
 
@@ -366,13 +366,9 @@ def _saving(reduction: Reduction, ink: _Ink, accurate=None) -> list[str]:
         lines.append(ink("  never proposed, so exact paths are used instead.", "dim"))
 
     lines.append("")
-    if reduction.ignore_file == ".gitignore":
-        flag = "--write-gitignore"
-    elif reduction.ignore_file == CONTEXTCOST_IGNORE_FILE:
-        flag = "--emit-ignore"
-    else:
-        flag = "--write-ignore"
-    lines.append(ink(f"  Add to {reduction.ignore_file} (or run with {flag}):", "dim"))
+    lines.append(
+        ink(f"  Add to {reduction.ignore_file} (or run with {reduction.write_flag}):", "dim")
+    )
     for pattern in reduction.patterns[:12]:
         lines.append("    " + ink(pattern, "cyan"))
     if len(reduction.patterns) > 12:
@@ -392,6 +388,37 @@ def _unreadable(walk: WalkResult, ink: _Ink) -> list[str]:
     for path, reason in walk.skipped[:10]:
         lines.append(f"  {path[:46]}  " + ink(reason[:28], "dim"))
     lines.append(ink("  Counted as nothing, which understates the total.", "dim"))
+    return lines
+
+
+def _next_steps(reduction: Reduction, ink: _Ink) -> list[str]:
+    """The run is not the product; keeping the waste out is.
+
+    A one-shot measurement is forgotten by lunch. The report therefore ends
+    with the three moves that turn it into a standing control: accept the
+    proposal, gate future changes in CI, and put a badge on the README so the
+    number -- and the tool that produced it -- stay visible. Printed only when
+    there was something to act on; a clean repository needs no follow-up.
+    """
+    if not reduction.patterns:
+        return []
+    lines = _section("NEXT STEPS", ink)
+    steps = [
+        f"1. Accept the proposal above: re-run with {reduction.write_flag},"
+        " then re-measure to confirm the saving.",
+        "2. Gate it in CI so it stays saved:"
+        " contextcost --fail-over <budget>  (exit 4 when over)",
+        "3. Show it off: contextcost . --markdown --badge  -- paste into"
+        " your README",
+    ]
+    for step in steps:
+        lines.append(ink("  " + step, "dim"))
+    lines.append(
+        ink(
+            "  Full guide: https://github.com/CAOShurong/contextcost#readme",
+            "dim",
+        )
+    )
     return lines
 
 
@@ -419,5 +446,6 @@ def render(
     lines += _deferred(reduction, ink)
     lines += _saving(reduction, ink, accurate)
     lines += _unreadable(walk, ink)
+    lines += _next_steps(reduction, ink)
     lines.append("")
     return "\n".join(lines)

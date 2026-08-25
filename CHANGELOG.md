@@ -8,6 +8,25 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- A next-steps hook at the end of the terminal report. When a proposal exists,
+  the report now closes with three concrete moves — accept it (`--write-ignore`
+  family), gate it (`--fail-over` in CI), and publish a badge
+  (`--markdown --badge`) — instead of ending at the saving number, because a
+  one-shot measurement is forgotten and retained usage is what keeps waste
+  out. Printed only when there is something to act on; a clean repository gets
+  no follow-up section. The flag shown is derived from `ignore_file` via a new
+  `Reduction.write_flag` property, which also replaces the flag-selection
+  branch inside the SAVING section. Two new tests = 193.
+
+- The first case study (`docs/case-studies/2026-08-25-seven-repos.md`):
+  contextcost run over seven well-known repositories with every number from
+  real `--json` output — plotly.js 63.8M tokens with 42.0% proposed as waste
+  (17.4M build output + 5.9M minified bundles), dask 46.5% (one `pixi.lock`
+  is 22% of the repo's context cost), pandas 21.5%, rclone 21.8%, keycloak
+  7.5%, astropy 2.7% (stated honestly: a hygienic repo has little to cut).
+  Distribution material, not a feature; nothing is posted externally without
+  approval.
+
 - `--delta` now accepts a git revision as its base, so measuring a change no
   longer requires a second checkout. When the base argument is not a
   directory on disk, it is offered to git as a revision of the repository

@@ -149,3 +149,21 @@ def test_saving_names_the_consumers_real_ignore_file(tmp_path):
     assert "consumer: aider" in text
     assert "Add to .aiderignore" in text
     assert "--write-ignore" in text
+
+
+def test_next_steps_appear_when_there_is_waste_to_act_on(tmp_path):
+    """The report should not end at the number: the three moves that turn a
+    one-shot measurement into a standing control are printed with it."""
+    root = build(tmp_path, {"yarn.lock": FILLER, "src/app.py": SOURCE})
+    text = report_for(root)
+    assert "NEXT STEPS" in text
+    assert "--write-gitignore" in text
+    assert "--fail-over" in text
+    assert "--badge" in text
+
+
+def test_a_clean_repository_gets_no_next_steps(tmp_path):
+    """No proposal means nothing to accept and no follow-up to sell."""
+    root = build(tmp_path, {"src/app.py": SOURCE})
+    text = report_for(root)
+    assert "NEXT STEPS" not in text

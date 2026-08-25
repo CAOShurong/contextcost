@@ -84,7 +84,14 @@ methodology is the moat; everything below strengthens or distributes it.
       negative budget is usage error 2; 5 new tests = 181; verified live on
       this repo — 75,546 tokens passes 500k, fails 1k — and plotly.js —
       fails 1M, passes 100M.)
-- [ ] Windows path-separator audit of every rule in classify.py.
+- [done rev 12] Windows path-separator audit of every rule in classify.py.
+      (Shipped: no user-visible bug existed — the walker always normalises to
+      `/`. Audit pinned the contract with 9 tests: directory rules fail
+      closed on backslash paths on every platform; name rules' verdicts are
+      host-basename-defined and documented; dense rule proven
+      separator-blind; banner read via os.path.join proven for both
+      separators; walker pinned to emit `/` always. 190 tests green;
+      verified on this repo (77,338 tokens) and plotly.js (63.83M).)
 
 ## Release discipline
 

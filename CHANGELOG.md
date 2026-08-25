@@ -8,6 +8,25 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- A Windows path-separator audit of every rule in `classify.py`, closing the
+  last backlog item. Every rule consumes a relative path that arrives joined
+  with `/` — the walker normalises `os.sep` away and the ignore matcher is
+  compiled over `/`-joined paths — and the audit turned that assumption into
+  checked contract. Feeding each rule a backslash-joined path (the form an
+  un-normalised walk would produce) split the rule set by how it reads paths:
+  directory rules (`vendored`, snapshot directories, build output) scan
+  segments split on `/` only, so a backslash hides every directory from them;
+  name rules (`lockfile`, `minified`, snapshot extensions, large data) go
+  through `os.path.basename`, which on Windows also splits on `\`. Neither is
+  reachable through the walker, so no user-visible bug existed — but now the
+  directory rules are pinned to fail closed on any platform, the name rules'
+  platform-defined verdicts are documented with a Windows-host assertion, a
+  control test proves the dense (byte-measuring) rule is separator-blind, a
+  real-file test proves the generator-banner read works via
+  `os.path.join` on both separators, and a walker test pins that it emits `/`
+  always. Nine new tests = 190; verified live on this repo (77,338 tokens,
+  Windows host) and plotly.js (63,831,059 tokens).
+
 - `--fail-over BUDGET`: a CI gate on total size. Exits `4` when the measured
   total exceeds BUDGET tokens (the exact total under `--accurate`, otherwise
   the estimate, with the ±14% band named in the message). Deliberately

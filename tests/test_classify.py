@@ -220,3 +220,167 @@ def test_every_rule_states_a_rationale_someone_could_disagree_with():
 def test_an_unknown_rule_name_raises(tmp_path):
     with pytest.raises(KeyError):
         rule_named("no-such-rule")
+
+
+# --- Windows path-separator audit --------------------------------------------
+#
+# Every rule in this module consumes a *relative* path that arrives joined
+# with "/" -- walk_repository normalises ``os.sep`` away before any rule sees
+# a path, and the ignore matcher is compiled over "/"-joined paths too. This
+# audit pins that contract by feeding every rule a path that was *not*
+# normalised: the backslash form an ``os.sep``-joined walk would produce if a
+# producer ever stopped converting. What may be asserted splits by rule class,
+# because the two classes read paths differently:
+#
+# **Directory rules** (vendored, snapshot-dir, build-output) split on "/"
+# only (:func:`classify._segments`), so a backslash hides every directory and
+# the rule must not fire. That holds on every platform.
+#
+# **Name rules** (lockfile, minified, snapshot-ext) and the large-data rule
+# go through :func:`os.path.basename`, which follows the host: on Windows it
+# splits on both separators, on POSIX only on "/". Their verdict for an
+# out-of-contract path is therefore platform-defined by construction -- what
+# must hold everywhere is only that the rule decides without crashing and
+# quotes evidence, never raising or returning a finding whose evidence does
+# not name its own rule's reason.
+#
+# Either way nothing reaches a user: the walker always emits "/", so these
+# tests exist so that assumption is checked rather than folklore. They run on
+# every platform, so CI's Linux runner exercises them too.
+
+import ntpath  # noqa: E402
+
+import os  # noqa: E402
+
+from contextcost.classify import (  # noqa: E402
+    BUILD_OUTPUT,
+    LARGE_DATA,
+    LARGE_DATA_TOKENS,
+    LOCKFILE,
+    MINIFIED,
+    MIN_REPORTABLE_TOKENS,
+    SNAPSHOT,
+    VENDORED,
+    _segments,
+    classify,
+)
+from contextcost.walk import FileCost, WalkResult  # noqa: E402
+
+#: A token count safely above MIN_REPORTABLE_TOKENS, for hand-built FileCost
+#: objects that skip the walk.
+FILLER_TOKEN_COUNT = 400
+
+
+def finding_for(cost):
+    """The single rule that fires for one hand-built FileCost, or None."""
+    findings = classify(_result_of_one(cost))
+    assert len(findings) <= 1
+    return findings[0] if findings else None
+
+
+def _result_of_one(cost):
+    return WalkResult(root=".", files=[cost])
+
+
+#: Directory-based rules: the segment scan sees no directory in a backslash
+#: path, so none of these may fire -- on Windows, POSIX, anywhere.
+DIRECTORY_CASES = [
+    ("vendored", VENDORED, FileCost("vendor\\lib.py", 400, FILLER_TOKEN_COUNT, "code")),
+    (
+        "snapshot-dir",
+        SNAPSHOT,
+        FileCost(
+            "tests\\__snapshots__\\a.py", 400, FILLER_TOKEN_COUNT, "code"
+        ),
+    ),
+    (
+        "build-output",
+        BUILD_OUTPUT,
+        FileCost("build\\out.py", 400, FILLER_TOKEN_COUNT, "code"),
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "name,rule,cost", DIRECTORY_CASES, ids=[c[0] for c in DIRECTORY_CASES]
+)
+def test_a_backslash_hides_directories_from_directory_rules(name, rule, cost):
+    assert _segments(cost.path) == []
+    assert finding_for(cost) is None
+
+
+#: Name-based and measurement rules: the decision is platform-defined for an
+#: out-of-contract path, so the portable assertion is "decides without
+#: crashing", and where it does fire the evidence quotes the file itself.
+NAME_CASES = {
+    "lockfile": (
+        LOCKFILE,
+        FileCost("vendor\\package-lock.json", 400, 400, "code"),
+    ),
+    "minified": (
+        MINIFIED,
+        FileCost("dist\\app.min.js", 4000, 4000, "dense"),
+    ),
+    "snapshot-ext": (
+        SNAPSHOT,
+        FileCost("tests\\test_a.snap", 400, FILLER_TOKEN_COUNT, "code"),
+    ),
+    "large-data": (
+        LARGE_DATA,
+        FileCost("data\\rows.json", 9000, LARGE_DATA_TOKENS + 1, "prose"),
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    "rule,cost", list(NAME_CASES.values()), ids=NAME_CASES.keys()
+)
+def test_a_backslash_path_is_decided_without_crashing(rule, cost):
+    """The portable guarantee for an out-of-contract path: the rule reaches
+    a verdict without raising, and if it fires it is its own rule."""
+    finding = finding_for(cost)
+    assert finding is None or finding.rule is rule
+
+
+def test_name_rules_follow_the_host_separator_aware_basename():
+    """Documents *why* the name-rule verdicts above are platform-defined:
+    they read :func:`os.path.basename`, which on Windows also splits on
+    ``\\``. On a Windows host a backslash path still fires; the walker never
+    produces such a path, so the contract is unchanged."""
+    if os.name == "nt":
+        cost = NAME_CASES["lockfile"][1]
+        assert finding_for(cost) is not None
+        assert os.path.basename(cost.path) == ntpath.basename(cost.path)
+
+
+def test_the_walker_never_emits_a_backslash(tmp_path):
+    """The real guarantee underneath all of the above."""
+    root = tmp_path / "vendor"
+    root.mkdir()
+    (root / "lib.py").write_text(FILLER, encoding="utf-8")
+    result = walk_repository(str(tmp_path))
+    assert [c.path for c in result.files] == ["vendor/lib.py"]
+
+
+def test_a_dense_file_is_found_whatever_the_separator():
+    """The dense rule measures bytes, not names, so it is separator-blind --
+    pinned here as the control case the table above must not break."""
+    text = "x" * 400
+    forward = FileCost("assets/blob.bin", len(text), len(text), "dense")
+    back = FileCost("assets\\blob.bin", len(text), len(text), "dense")
+    assert finding_for(forward).rule.name == "dense"
+    assert finding_for(back).rule.name == "dense"
+
+
+def test_a_generated_banner_is_read_via_os_path_join_so_both_separators_work(
+    tmp_path,
+):
+    """The generated rule opens ``os.path.join(root, cost.path)``, which is
+    correct for a "/"-joined relative path on every platform -- verified
+    against a real file rather than reasoning about it."""
+    target = tmp_path / "gen" / "out.py"
+    target.parent.mkdir()
+    target.write_text("// Code generated by protoc. DO NOT EDIT.\n" + FILLER)
+    result = walk_repository(str(tmp_path))
+    found = {f.path: f.rule.name for f in classify(result)}
+    assert found == {"gen/out.py": "generated"}

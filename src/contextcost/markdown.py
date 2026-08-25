@@ -111,9 +111,9 @@ def _breakdown(walk: WalkResult) -> list[str]:
     for name, tokens in list(totals.items())[:8]:
         share = tokens / walk.tokens if walk.tokens else 0.0
         rows.append([f"`{_esc(name)}`", _fmt(tokens), f"{share:.0%}"])
-    return ["## Where it goes", ""] + _table(
-        ["directory", "tokens", "share"], rows
-    ) + [""]
+    return (
+        ["## Where it goes", ""] + _table(["directory", "tokens", "share"], rows) + [""]
+    )
 
 
 def _largest(walk: WalkResult, top: int, accurate=None) -> list[str]:
@@ -154,9 +154,7 @@ def _findings(reduction: Reduction, top: int) -> list[str]:
                 str(len(group)),
             ]
         )
-    lines += _table(
-        ["confidence", "rule", "tokens", "files"], rows
-    ) + [""]
+    lines += _table(["confidence", "rule", "tokens", "files"], rows) + [""]
     # The per-file detail stays below the table so a collapsed PR comment
     # still shows the totals before the evidence gets long.
     for name, group in by_rule(reduction.findings).items():

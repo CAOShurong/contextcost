@@ -226,9 +226,7 @@ def test_contextcostignore_is_read_even_when_gitignore_semantics_are_off(tmp_pat
     change a --no-gitignore measurement, and the flag would lie."""
     (tmp_path / CONTEXTCOST_IGNORE_FILE).write_text("data/\n", encoding="utf-8")
 
-    assert load_ignore_rules(
-        str(tmp_path), use_gitignore=False
-    ).ignored("data/big.csv")
+    assert load_ignore_rules(str(tmp_path), use_gitignore=False).ignored("data/big.csv")
     # ...and it is listed as an input even then.
     assert active_ignore_files(str(tmp_path), use_gitignore=False) == [
         CONTEXTCOST_IGNORE_FILE

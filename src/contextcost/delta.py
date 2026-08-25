@@ -92,11 +92,10 @@ def measure_delta(base_root: str, head_root: str) -> Delta:
     lockfile" is a measurement of files that exist in the head tree -- not an
     inference from filenames alone.
     """
+
     def costs(root: str) -> tuple[WalkResult, dict[str, int]]:
         walked = walk_repository(os.path.abspath(root), use_gitignore=True)
-        return walked, {
-            cost.path: cost.tokens for cost in walked.text_files
-        }
+        return walked, {cost.path: cost.tokens for cost in walked.text_files}
 
     _, base_costs = costs(base_root)
     head_walk, head_costs = costs(head_root)

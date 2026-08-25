@@ -56,7 +56,8 @@ def test_grown_and_shrunk_files_carry_the_difference(tmp_path):
     assert by_path["src/b.py"].change == "shrunk"
     # Unchanged files are noise; they must not be listed.
     unchanged = [
-        p for p, c in {
+        p
+        for p, c in {
             "/src/app.py": (len(SOURCE), len(grown)),
             "/src/b.py": (len(SOURCE), 100),
         }.items()

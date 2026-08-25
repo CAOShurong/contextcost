@@ -117,9 +117,11 @@ def active_ignore_files(
         if use_gitignore or relative != ".git/info/exclude"
     )
     candidates = (
-        (".gitignore",) if use_gitignore else ()
-    ) + consumer_files + (
-        CONTEXTCOST_IGNORE_FILE,  # applied last, wins over everything above
+        ((".gitignore",) if use_gitignore else ())
+        + consumer_files
+        + (
+            CONTEXTCOST_IGNORE_FILE,  # applied last, wins over everything above
+        )
     )
     active = []
     for relative in candidates:

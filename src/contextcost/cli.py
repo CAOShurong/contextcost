@@ -156,6 +156,16 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--version", action="version", version=f"contextcost {__version__}"
     )
+    parser.add_argument(
+        "mcp",
+        nargs="?",
+        default=None,
+        metavar="COMMAND",
+        help=(
+            "'mcp' serves the MCP protocol (estimate/propose tools) over"
+            " line-delimited JSON-RPC on stdio"
+        ),
+    )
     return parser
 
 
@@ -288,6 +298,16 @@ def _esc(text: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    # 'mcp' usually lands in the optional path slot (only one token given);
+    # accept either position so `contextcost mcp` and `contextcost . mcp`
+    # both serve. A repository directory literally named 'mcp' must be
+    # spelled './mcp' -- the reserved word buys the agent-facing protocol.
+    if args.mcp == "mcp" or args.path == "mcp":
+        # The MCP server owns stdio from here on: no report, no exit-code
+        # semantics, just the protocol until the client closes the pipe.
+        from .mcp_server import serve
+
+        return serve()
     if args.json_schema:
         print(_contract_text())
         return 0

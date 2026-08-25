@@ -387,10 +387,32 @@ print(result.deferred)                     # what it refused to decide
 `walk_repository`, `classify` and `reduce_repository` are all usable
 separately, and every dataclass has `as_dict()`.
 
+## As an MCP server
+
+Coding agents that speak [MCP](https://modelcontextprotocol.io) can call this
+tool instead of shelling out — same measurement, same schema, one tool call:
+
+```bash
+contextcost mcp    # line-delimited JSON-RPC on stdio
+```
+
+Two tools are served. `estimate(repo)` returns the full `--json` payload;
+`propose(repo)` returns the measured exclusion proposal plus a ready-to-paste
+ignore block. Stdio transport, stdlib-only JSON-RPC 2.0 — no SDK dependency:
+
+```json
+{"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+ "params": {"name": "estimate", "arguments": {"repo": "/path/to/repo"}}}
+```
+
+Claude Code (`claude mcp add contextcost -- contextcost mcp`) and any other
+MCP client then get "what does this repo cost and what is wasting it" as a
+tool call beside the model.
+
 ## Development
 
 ```bash
-python -m pytest -q                      # 158 tests, no configuration needed
+python -m pytest -q                      # 176 tests, no configuration needed
 python -m ruff check src tests docs
 python docs/build_docs.py                # regenerate the figures and README
 python docs/build_docs.py --check        # CI fails if they are stale

@@ -8,6 +8,18 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Community surface: GitHub Discussions are now enabled, with a lightweight
+  issue-template entry point (`Questions & feedback`) that routes
+  "this number looks wrong" reports toward `--accurate --json` output so a
+  dispute arrives as checkable data. README "Share it" section links the
+  Discussions forum.
+- Ready-to-post launch drafts for external distribution (Reddit / Show HN /
+  X thread) in `docs/engagement/launch-drafts.md` — first-person posts built
+  only from already-published, live-re-verified case-study numbers (buildkit
+  89.5% … yq 0.7%), each with an explicit maker-disclosure and a posting
+  checklist that requires re-running every cited number at posting time.
+  Not posted; external posting requires user approval.
+
 - Full independent re-verification of the published case-study numbers
   (2026-08-26): all eleven repositories re-run live with v0.5.1 `--json` on
   the local checkouts at the commits cited in the posts — every figure in

@@ -502,6 +502,11 @@ next repository you point this at. The
 preview card when pasted into Slack, Discord, X, or a chat window — no extra
 work needed, just paste the link.
 
+Questions, methodology debates, and "this number looks wrong" reports are
+welcome in [Discussions](https://github.com/CAOShurong/contextcost/discussions) —
+if a saving looks off, paste `--accurate --json` output and it becomes a
+concrete, checkable claim.
+
 ## Licence
 
 MIT.

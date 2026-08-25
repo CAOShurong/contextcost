@@ -1,0 +1,28 @@
+name: Questions & feedback
+description: Ask anything about measuring, proposals, or the re-measurement methodology — or tell us the numbers look wrong.
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No template needed — just open a blank discussion in
+        [Discussions](https://github.com/CAOShurong/contextcost/discussions)
+        and ask.
+
+        If you're reporting a number that looks wrong, one command makes it
+        actionable:
+
+        ```bash
+        uvx contextcost <your-repo> --accurate --json
+        ```
+
+        `--accurate` counts with the real tokenizer (cl100k_base) instead of
+        the estimator, and `--json` gives the exact per-file breakdown. Paste
+        both outputs and we can see exactly where estimate and truth diverge.
+  - type: textarea
+    id: context
+    attributes:
+      label: What are you measuring?
+      description: Repo URL + what surprised you. Roughly one sentence is plenty.
+    validations:
+      required: false

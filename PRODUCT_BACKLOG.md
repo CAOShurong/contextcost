@@ -34,6 +34,18 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done 2026-08-26b] Community surface + launch readiness: GitHub Discussions
+      enabled (repo had no discussion venue for the traffic a launch post
+      would send); `Questions & feedback` issue-template routes "number
+      looks wrong" reports to `--accurate --json`; README Share-it section
+      links the forum. Ready-to-post Reddit / Show HN / X drafts written in
+      docs/engagement/launch-drafts.md from live-re-verified numbers only,
+      each with maker disclosure + re-verify-at-posting checklist. Cold-user
+      path re-verified end-to-end: `uvx contextcost` v0.5.1 on rclone
+      (7,889,081 → 6,169,673, 22% saved) and astropy (7,881,727 → 3%,
+      matches published figure exactly). Not posted; external posting needs
+      user approval.
+
 - [done 2026-08-26] Integrity audit of every published number + engagement
       refresh: re-ran v0.5.1 `--json` live on all eleven local checkouts at
       the commits cited in both case studies — all figures reproduce exactly

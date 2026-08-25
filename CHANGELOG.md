@@ -8,6 +8,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Head-to-head case study against a packing tool:
+  `docs/case-studies/2026-08-26-vs-packing.md`. Both tools ran on the same
+  full plotly.js checkout — repomix packed 2,595 files / 39,150,382 exact
+  tokens, of which **73% of packed characters** came from `dist/` build
+  output and `test/image/mocks/` fixtures it had no opinion about;
+  contextcost proposed and *measured* a 26.8 M-token (42%) saving on the same
+  tree. Positions contextcost as the audit step before any packing workflow.
+
 - GitHub Pages landing page, live at
   <https://caoshurong.github.io/contextcost/> (site enabled from `main`
   `/docs`). One static file (`docs/index.html`) rendered by

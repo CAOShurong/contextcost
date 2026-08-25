@@ -58,6 +58,12 @@ too: [seven real repos measured](docs/case-studies/2026-08-25-seven-repos.md)
 ran from **46.5% waste (dask) to 2.7% (astropy)** — clean repos correctly get
 told they're clean.
 
+How this relates to the packing tools (repomix, gitingest, code2prompt): we
+ran repomix and contextcost on the *same* plotly.js checkout —
+[the comparison](docs/case-studies/2026-08-26-vs-packing.md). Short version:
+73% of what the packer packed was provable dead weight, and the packer has no
+opinion about that. Packing is step two; auditing is step one.
+
 Point it at any repository. It measures what reading that repository costs in
 tokens, works out which files are spending that budget without earning it, and
 then re-measures the result — so every number it reports is one it observed.

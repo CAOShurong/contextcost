@@ -92,6 +92,7 @@ cl100k_base counts (on plotly.js the estimate landed 0.7% off).</p>
 <footer>
 Full methodology and reproduction commands:
 <a href="https://github.com/CAOShurong/contextcost/blob/main/docs/case-studies/2026-08-25-seven-repos.md">the seven-repo case study</a>.
+Also new: <a href="https://github.com/CAOShurong/contextcost/blob/main/docs/case-studies/2026-08-26-vs-packing.md">repomix vs contextcost on the same repo</a>.
 Source: <a href="https://github.com/CAOShurong/contextcost">github.com/CAOShurong/contextcost</a>
 &middot; <a href="https://pypi.org/project/contextcost/">PyPI</a>.
 </footer>

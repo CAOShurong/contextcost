@@ -6,6 +6,23 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+- Release notes that sell: the v0.5.0 and v0.5.1 GitHub Releases previously
+  consisted of a single auto-generated changelog link — the page every
+  release visitor, packager, and news aggregator lands on showed nothing
+  about what the tool does or why its numbers are different. Both releases
+  now carry full notes (the measure→propose→re-measure pitch, the real
+  seventeen-repo results table, feature highlights, Discussions pointer);
+  source markdown kept in `docs/engagement/release-body-v0.5.*.md`.
+- Repository discoverability metadata: description rewritten to lead with
+  the question ("How many tokens does an AI agent pay to read your repo?")
+  plus the `uvx` one-liner; homepage now points at the landing page instead
+  of PyPI; topics refreshed to 20 search-relevant tags (added `ai-tools`,
+  `token-optimization`, `context-cost`, `contextcost`, `hacktoberfest`,
+  `llm-tools`; dropped near-zero-search `tiktoken`, `tokens`, `github-actions`
+  duplicates kept where meaningful). Note: GitHub has no API for the social
+  preview image (Settings-only upload) — it must be set once in the web UI
+  from `docs/assets/social-card.png`.
+
 ### Added
 
 - Community surface: GitHub Discussions are now enabled, with a lightweight

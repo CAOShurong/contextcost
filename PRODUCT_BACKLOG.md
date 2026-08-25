@@ -34,9 +34,15 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
-- [in-progress rev 8] GitHub Action `contextcost/action`: on pull_request, comment the
+- [done rev 8] GitHub Action `contextcost/action`: on pull_request, comment the
       delta ("this PR adds +41,882 tokens, 92 % of it a lockfile"). Needs
       `--json` first. This is the growth loop: every install markets the CLI.
+      (Shipped e09d367: core `delta.py` (per-file compare + head-tree
+      attribution) + `--delta BASE` printing through `--markdown`/`--json`;
+      composite `action.yml` posts/updates one marked PR comment; 11 new
+      tests = 150 total; verified on two checkouts of this repo with a
+      synthetic lockfile commit, +41,797 tokens split 32k lockfile / 9.5k
+      unclassified.)
 - [done rev 6] `--json` machine output (stable schema, versioned) — prerequisite for
       the Action and for editor integrations.
       (Shipped 3532dbc: `"schema": 1` in every payload, contract as data in

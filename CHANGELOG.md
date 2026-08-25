@@ -8,6 +8,16 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Second case study, ten more repositories
+  (`docs/case-studies/2026-08-26-ten-more-repos.md`): moby/buildkit **89.5%**
+  waste (7.5M vendored + 5.4M generated tokens of a 14.6M-token total),
+  lazygit 77.8%, bat 55.8% (three md5-identical copies of a cryptography
+  test-vector suite; six vector files alone are 12.1M tokens), uv 51.1%, ruff
+  50.2% — down to yq at **0.7%**, the honest floor. Every number is real
+  `--json` output from v0.5.1 on public checkouts; `reproduce.sh` now covers
+  all seventeen repositories plus contextcost itself in one command.
+  Distribution material, not a feature.
+
 - Head-to-head case study against a packing tool:
   `docs/case-studies/2026-08-26-vs-packing.md`. Both tools ran on the same
   full plotly.js checkout — repomix packed 2,595 files / 39,150,382 exact

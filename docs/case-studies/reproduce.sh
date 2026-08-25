@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Reproduce every number in docs/case-studies/2026-08-25-seven-repos.md.
+# Reproduce every number in docs/case-studies/2026-08-25-seven-repos.md
+# (and docs/case-studies/2026-08-26-ten-more-repos.md, whose repositories are
+# in the second list below).
 #
 # Usage:   bash docs/case-studies/reproduce.sh [path-to-checkouts-parent]
 # Default parent: the layout used for the original measurements
@@ -28,6 +30,20 @@ repos=(
   "rclone/rclone"
   "astropy/astropy"
 )
+# Repositories of the ten-more-repos case study (2026-08-26). Their local
+# checkouts use a flat <parent>/<name> layout, so each entry is "name path".
+more_repos=(
+  "buildkit moby/buildkit"
+  "lazygit jesseduffield/lazygit"
+  "bat sharkdp/bat"
+  "uv astral-sh/uv"
+  "ruff astral-sh/ruff"
+  "gitleaks gitleaks/gitleaks"
+  "trufflehog trufflesecurity/trufflehog"
+  "xarray pydata/xarray"
+  "restic restic/restic"
+  "yq mikefarah/yq"
+)
 # contextcost itself lives outside the parent; adjust or drop as needed
 self_repo="$(cd "$HERE/../.." && pwd)"
 self_repo="$(cygpath -w "$self_repo")"
@@ -37,21 +53,24 @@ trap 'rm -f "$tmp"' EXIT
 
 printf "%-20s %12s %12s %12s %7s\n" REPO BEFORE AFTER SAVED SHARE
 failed=0
-for rel in "${repos[@]}" "contextcost"; do
-  if [ "$rel" = "contextcost" ]; then
-    path="$self_repo"
-  else
-    path="$PARENT/$rel"
-  fi
+measure() {  # measure NAME PATH
   rc=0
-  uvx contextcost "$path" --json >"$tmp" 2>/dev/null || rc=$?
+  uvx contextcost "$2" --json >"$tmp" 2>/dev/null || rc=$?
   if [ "$rc" -ge 2 ]; then
-    echo "error: $rel: contextcost exited $rc" >&2
+    echo "error: $1: contextcost exited $rc" >&2
     failed=1
-    continue
+    return
   fi
-  python "$HERE/summarize.py" "$rel" <"$tmp" || failed=1
+  python "$HERE/summarize.py" "$1" <"$tmp" || failed=1
+}
+for rel in "${repos[@]}"; do
+  measure "${rel##*/}" "$PARENT/$rel"
 done
+for entry in "${more_repos[@]}"; do
+  set -- $entry
+  [ -d "$PARENT/$2" ] && measure "$1" "$PARENT/$2" || echo "skip: $1 (no checkout at $PARENT/$2)" >&2
+done
+measure contextcost "$self_repo"
 
 echo
 echo "Notes:"

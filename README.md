@@ -55,7 +55,9 @@ repository a second time with the proposal applied*, so the saving is the
 difference between two measurements — and if a pattern had caught anything it
 wasn't supposed to, you'd see the narrowing in the report. This scales down
 too: [seven real repos measured](docs/case-studies/2026-08-25-seven-repos.md)
-ran from **46.5% waste (dask) to 2.7% (astropy)** — clean repos correctly get
+ran from **46.5% waste (dask) to 2.7% (astropy)**, and
+[ten more](docs/case-studies/2026-08-26-ten-more-repos.md) stretched that to
+**89.5% (moby/buildkit) down to 0.7% (yq)** — clean repos correctly get
 told they're clean.
 
 How this relates to the packing tools (repomix, gitingest, code2prompt): we

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>contextcost — what does it cost an AI agent to read your repo?</title>
+<meta name="description" content="Measure what a repository costs an AI coding agent to read in tokens, find what is wasting that budget, and prove the saving by measuring it again.">
+<style>
+  :root { --ink:#101218; --paper:#e8eaf0; --muted:#787e8e; --waste:#e8765c; --saved:#7cc48c; }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--ink); color:var(--paper); font:16px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; max-width:880px; margin:0 auto; padding:3rem 1.5rem 5rem; }
+  h1 { font-size:1.7rem; line-height:1.3; margin-bottom:.75rem; }
+  h2 { font-size:1.05rem; margin:2.5rem 0 .75rem; color:var(--paper); }
+  p, li { color:#c4c8d4; }
+  a { color:var(--saved); text-decoration:none; } a:hover { text-decoration:underline; }
+  .sub { color:var(--muted); margin-bottom:1.5rem; }
+  .try { background:#181b24; border:1px solid #2c303c; border-radius:8px; padding:1rem 1.25rem; font-size:1.05rem; margin:1.5rem 0; overflow-x:auto; }
+  .try b { color:var(--saved); font-weight:normal; }
+  .try .dim { color:var(--muted); }
+  table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:.85rem; }
+  th { text-align:right; color:var(--muted); font-weight:normal; padding:.35rem .5rem; border-bottom:1px solid #2c303c; }
+  th:first-child, td:first-child { text-align:left; }
+  td { text-align:right; padding:.35rem .5rem; border-bottom:1px solid #22252f; white-space:nowrap; }
+  td:first-child { white-space:normal; }
+  td.save { color:var(--waste); font-weight:bold; }
+  footer { margin-top:3rem; color:var(--muted); font-size:.85rem; }
+</style>
+</head>
+<body>
+<h1>What does it cost an AI agent to read your repository &mdash; and how much of that is waste?</h1>
+<p class="sub">Free, open source (MIT), runs entirely locally. No tokenizer dependency.</p>
+
+<div class="try"><b>$ uvx contextcost .</b><br><span class="dim"># no install, no config, results in seconds</span></div>
+
+<h2>Measured on 7 well-known open-source repositories</h2>
+<table>
+<tr><th>Repository</th><th>Tokens to read</th><th>After proposal</th><th>Saved</th><th>Share</th></tr>
+<tr><td><a href="https://github.com/plotly/plotly.js">plotly.js</a></td><td>63,831,059</td><td>37,008,917</td><td class="save">26,822,142</td><td class="save">42.0%</td></tr>
+<tr><td><a href="https://github.com/dask/dask">dask</a></td><td>4,315,000</td><td>2,308,363</td><td class="save">2,006,637</td><td class="save">46.5%</td></tr>
+<tr><td><a href="https://github.com/pandas-dev/pandas">pandas</a></td><td>10,105,577</td><td>7,929,282</td><td class="save">2,176,295</td><td class="save">21.5%</td></tr>
+<tr><td><a href="https://github.com/keycloak/keycloak">keycloak</a></td><td>18,687,556</td><td>17,290,337</td><td class="save">1,397,219</td><td class="save">7.5%</td></tr>
+<tr><td><a href="https://github.com/rclone/rclone">rclone</a></td><td>7,889,210</td><td>6,169,802</td><td class="save">1,719,408</td><td class="save">21.8%</td></tr>
+<tr><td><a href="https://github.com/astropy/astropy">astropy</a></td><td>7,881,727</td><td>7,669,606</td><td class="save">212,121</td><td class="save">2.7%</td></tr>
+<tr><td><a href="https://github.com/CAOShurong/contextcost">contextcost itself</a></td><td>161,453</td><td>85,663</td><td class="save">75,790</td><td class="save">46.9%</td></tr>
+</table>
+<p>The "after" number is not arithmetic on guesses: contextcost proposes cuts,
+then <em>walks the repository again</em> with the proposal applied. Estimates
+carry a measured ±14% error bound; <code>--accurate</code> gives exact
+cl100k_base counts (on plotly.js the estimate landed 0.7% off).</p>
+
+<h2>What the waste actually is</h2>
+<ul>
+<li><strong>plotly.js &mdash; 42%, 26.8M tokens:</strong> compiled bundles under <code>dist/</code> plus recorded numeric test fixtures (single JSON files up to 4.58M tokens).</li>
+<li><strong>dask &mdash; 46.5%:</strong> one lockfile (<code>pixi.lock</code>, 932K tokens) is 22% of the entire repository's context cost.</li>
+<li><strong>astropy &mdash; 2.7%:</strong> a disciplined repository correctly gets told it is clean. The tool does not invent waste.</li>
+</ul>
+
+<h2>Make it permanent</h2>
+<div class="try"><b>$ contextcost . --write-ignore</b><br><span class="dim"># accept the proposal, confirm the saving once</span><br><br><b>$ contextcost . --fail-over 8000000</b><br><span class="dim"># then let CI fail when the budget creeps back</span></div>
+<p>Or gate pull requests automatically with <a href="https://github.com/CAOShurong/contextcost#use-in-ci">the GitHub Action</a> &mdash; every PR gets a comment with its token delta. There is also an <a href="https://github.com/CAOShurong/contextcost/blob/main/docs/coding-agents.md">MCP server mode</a> so Claude Code, Cursor and Codex can call it directly.</p>
+
+<footer>
+Full methodology and reproduction commands:
+<a href="https://github.com/CAOShurong/contextcost/blob/main/docs/case-studies/2026-08-25-seven-repos.md">the seven-repo case study</a>.
+Source: <a href="https://github.com/CAOShurong/contextcost">github.com/CAOShurong/contextcost</a>
+&middot; <a href="https://pypi.org/project/contextcost/">PyPI</a>.
+</footer>
+</body>
+</html>

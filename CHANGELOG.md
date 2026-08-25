@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- GitHub Pages landing page, live at
+  <https://caoshurong.github.io/contextcost/> (site enabled from `main`
+  `/docs`). One static file (`docs/index.html`) rendered by
+  `docs/build_site.py --check`-guarded: the seven-repo table is transcribed
+  from the reproduce.sh run and CI can fail the page when it goes stale,
+  same honesty rule as the README figures. First "site" leg of the
+  distribution plan (HONEST_ASSESSMENT root cause #1: discoverability ≈ 0).
+
 ### Changed
 
 - Case study made self-verifying. The seven-repo table had silently dropped

@@ -34,6 +34,16 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done rev 157] Social preview card (`docs/assets/social-card.png`,
+      1280×640): pasting the repo link into Slack/Discord/X previously
+      rendered bare text — zero share-surface despite three case studies
+      existing. Landing page now carries `og:image`/`twitter:card` showing a
+      real plotly.js measurement (63.8M tokens in, 42% measured saving) plus
+      a rendered terminal screenshot; same card embedded at the top of the
+      README. Verified live on Pages after deploy (og meta present, PNG
+      served with matching byte length); CI+CodeQL green; 201 tests pass;
+      no product code touched.
+
 - [done rev 156] Distribution release v0.5.1: the rewritten README (plotly.js
       hero + `uvx` one-liner) and CLI next-steps hook existed only on main —
       the PyPI landing page still showed the old mechanism-first text.

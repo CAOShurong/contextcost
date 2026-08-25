@@ -65,8 +65,14 @@ methodology is the moat; everything below strengthens or distributes it.
       protocol initialize/ping/tools.list/tools.call, errors-as-data; 18
       tests; live-verified on plotly.js stdio session — estimate
       63.83 M tokens, propose 26.8 M saved / 42 %, bad path −32603.)
-- [in-progress rev 10] Docs page "Use with coding agents": copy-paste configs for Claude
+- [done rev 10] Docs page "Use with coding agents": copy-paste configs for Claude
       Code, Cursor, Codex.
+      (Shipped 18d6987: docs/coding-agents.md — `claude mcp add` command +
+      committed .mcp.json, .cursor/mcp.json, `codex mcp add` +
+      ~/.codex/config.toml; formats verified against current client docs;
+      ready-to-use prompt + honest-notes section; linked from README MCP
+      section. 176 tests green, live plotly.js stdio re-verified
+      63.83M tokens / saved 26.8M = 42%.)
 
 ## P3 — hygiene
 

@@ -34,6 +34,16 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done 2026-08-26] Integrity audit of every published number + engagement
+      refresh: re-ran v0.5.1 `--json` live on all eleven local checkouts at
+      the commits cited in both case studies — all figures reproduce exactly
+      except gitleaks' total (upstream drift −152 tokens, share unchanged at
+      33.8%). The posts are verifiably true, not just claimed. LibreChat
+      drafts rewritten against PR #15089's current body (old accounting
+      question already answered there); new Draft A engages the summary-part
+      contract and asks about unbounded summary growth. Not posted; external
+      posting requires user approval.
+
 - [done rev 157] Social preview card (`docs/assets/social-card.png`,
       1280×640): pasting the repo link into Slack/Discord/X previously
       rendered bare text — zero share-surface despite three case studies

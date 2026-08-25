@@ -58,9 +58,9 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P2 — agent-native surface
 
-- [ ] MCP server mode (`contextcost mcp`, stdio): tools `estimate(repo)`
-      and `propose(repo)` so Claude/Cursor agents call it directly. Stdlib
-      JSON-RPC only — keep the zero-dep core intact.
+- [in-progress rev 9] MCP server mode (`contextcost mcp`, stdio): tools
+      `estimate(repo)` and `propose(repo)` so Claude/Cursor agents call it
+      directly. Stdlib JSON-RPC only — keep the zero-dep core intact.
 - [ ] Docs page "Use with coding agents": copy-paste configs for Claude
       Code, Cursor, Codex.
 

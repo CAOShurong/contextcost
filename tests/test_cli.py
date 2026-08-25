@@ -311,3 +311,35 @@ def test_emit_ignore_deduplicates_on_a_second_run(tmp_path, capsys):
     # left to propose; the second run must not duplicate the block.
     assert main([root, "--emit-ignore", "--quiet"]) == 0
     assert (tmp_path / ".contextcostignore").read_text(encoding="utf-8") == first
+
+
+def test_fail_over_passes_when_the_total_is_under_budget(tmp_path):
+    """The gate is about size, not waste: a wasteful but small repo passes."""
+    root = build(tmp_path, {"yarn.lock": FILLER, "src/app.py": SOURCE})
+    assert main([root, "--fail-over", "1000000", "--quiet"]) == 1
+
+
+def test_fail_over_exits_4_when_the_estimate_exceeds_the_budget(tmp_path, capsys):
+    root = build(tmp_path, {"yarn.lock": FILLER, "src/app.py": SOURCE})
+    assert main([root, "--fail-over", "10"]) == 4
+    err = capsys.readouterr().err
+    assert "over budget" in err and "exceeds the 10-token limit" in err
+    assert "band" in err
+
+
+def test_fail_over_is_silent_under_quiet_but_still_fails(tmp_path, capsys):
+    root = build(tmp_path, {"src/app.py": SOURCE})
+    assert main([root, "--fail-over", "10", "--quiet"]) == 4
+    assert capsys.readouterr().out == ""
+
+
+def test_fail_over_zero_budget_fails_any_nonempty_repository(tmp_path):
+    root = build(tmp_path, {"README.md": FILLER})
+    assert main([root, "--fail-over", "0", "--quiet"]) == 4
+    assert main([root, "--fail-over", "0", "--json"]) == 4
+
+
+def test_a_negative_budget_is_a_usage_error_not_an_exit_4(tmp_path, capsys):
+    root = build(tmp_path, {"README.md": FILLER})
+    assert main([root, "--fail-over", "-5", "--quiet"]) == 2
+    assert "non-negative" in capsys.readouterr().err

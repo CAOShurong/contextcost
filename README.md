@@ -334,6 +334,17 @@ want the output rather than the verdict, say so:
 contextcost --json > cost.json || true
 ```
 
+To gate on total size rather than on removable waste, `--fail-over BUDGET`
+exits `4` when the measured total exceeds BUDGET tokens — with `--accurate`
+that is the exact count, otherwise the estimate. Exit code `4` is distinct
+from `1` on purpose: waste (`1`) is a cleanup task, over-budget (`4`) is a
+scoping decision.
+
+```yaml
+- name: The whole repo must fit an agent's window
+  run: pipx run contextcost --fail-over 200000 --quiet
+```
+
 ## In a pull request
 
 `--delta` measures what a change does to the context budget: it walks a base
@@ -413,7 +424,7 @@ tool call beside the model.
 ## Development
 
 ```bash
-python -m pytest -q                      # 176 tests, no configuration needed
+python -m pytest -q                      # 181 tests, no configuration needed
 python -m ruff check src tests docs
 python docs/build_docs.py                # regenerate the figures and README
 python docs/build_docs.py --check        # CI fails if they are stale

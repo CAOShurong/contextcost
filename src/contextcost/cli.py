@@ -42,6 +42,13 @@ __all__ = ["main"]
 #: exact" from "the repository was not measurable".
 MISSING_DEPENDENCY_EXIT = 3
 
+#: Exit code for ``--fail-over`` when the measured total exceeds the budget.
+#: Distinct from ``1`` (waste was proposed) so a CI gate can tell "the
+#: repository carries removable weight" from "even after every proposed cut
+#: the thing is simply too big" -- the first is a cleanup task, the second a
+#: scoping decision.
+OVER_BUDGET_EXIT = 4
+
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -152,6 +159,16 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--no-color", action="store_true", help="disable ANSI colour")
     parser.add_argument(
         "--quiet", action="store_true", help="print nothing; use the exit code"
+    )
+    parser.add_argument(
+        "--fail-over",
+        metavar="BUDGET",
+        type=int,
+        help=(
+            "CI gate: exit 4 when the measured total exceeds BUDGET tokens"
+            " (the exact total with --accurate, otherwise the estimate);"
+            " exit 0 or 1 as usual otherwise"
+        ),
     )
     parser.add_argument(
         "--version", action="version", version=f"contextcost {__version__}"
@@ -298,6 +315,12 @@ def _esc(text: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    if args.fail_over is not None and args.fail_over < 0:
+        print(
+            "contextcost: --fail-over takes a non-negative token count",
+            file=sys.stderr,
+        )
+        return 2
     # 'mcp' usually lands in the optional path slot (only one token given);
     # accept either position so `contextcost mcp` and `contextcost . mcp`
     # both serve. A repository directory literally named 'mcp' must be
@@ -421,7 +444,36 @@ def main(argv: list[str] | None = None) -> int:
         if not args.quiet:
             print(message)
 
-    return 1 if reduction.patterns else 0
+    exit_code = 1 if reduction.patterns else 0
+    if args.fail_over is not None:
+        # The gate judges the total, not the waste: with --accurate it checks
+        # the exact count, otherwise the estimate -- and the message names the
+        # band either way, because a budget compared against a bare estimate
+        # would be precision the number does not have. Over-budget wins over
+        # "waste was proposed": the stricter verdict is the more useful one to
+        # act on, and both are true.
+        measured = accurate.tokens if accurate is not None else walk.tokens
+        if measured > args.fail_over:
+            if not args.quiet:
+                kind = (
+                    f"exact ({accurate.encoding})"
+                    if accurate is not None
+                    else f"estimated ±{ERROR_BOUND:.0%}"
+                )
+                band_low = int(measured * (1 - ERROR_BOUND))
+                band_high = int(measured * (1 + ERROR_BOUND))
+                print(
+                    f"contextcost: over budget -- {measured:,} tokens"
+                    f" {kind} exceeds the {args.fail_over:,}-token limit"
+                    + (
+                        ""
+                        if accurate is not None
+                        else f" (band {band_low:,}..{band_high:,})"
+                    ),
+                    file=sys.stderr,
+                )
+            return OVER_BUDGET_EXIT
+    return exit_code
 
 
 if __name__ == "__main__":  # pragma: no cover

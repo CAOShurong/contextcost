@@ -8,6 +8,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `--fail-over BUDGET`: a CI gate on total size. Exits `4` when the measured
+  total exceeds BUDGET tokens (the exact total under `--accurate`, otherwise
+  the estimate, with the ±14% band named in the message). Deliberately
+  distinct from exit `1`: waste means "clean this up", over-budget means
+  "this repository no longer fits the budget at all". A negative budget is a
+  usage error (exit 2). Five new tests; verified live on this repo
+  (75,546 tokens: pass at 500k, fail at 1k) and plotly.js (fail at 1M,
+  pass at 100M).
+
 - A docs page for coding agents (`docs/coding-agents.md`): copy-paste MCP
   configs for Claude Code (`claude mcp add` command + committed
   `.mcp.json`), Cursor (`.cursor/mcp.json`) and Codex CLI

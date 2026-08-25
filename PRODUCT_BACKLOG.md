@@ -76,8 +76,14 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P3 — hygiene
 
-- [ ] `--top N`, `--fail-over <budget>` exit codes for CI gating
+- [done rev 11] `--top N`, `--fail-over <budget>` exit codes for CI gating
       (mirror repomix's `--token-budget` so migrations from it are easy).
+      NOTE: `--top N` already existed since v0.1; this item was really about
+      `--fail-over`. (Shipped: exit 4 = over budget, distinct from 1 = waste,
+      exact total under --accurate else estimate with ±14% band in message;
+      negative budget is usage error 2; 5 new tests = 181; verified live on
+      this repo — 75,546 tokens passes 500k, fails 1k — and plotly.js —
+      fails 1M, passes 100M.)
 - [ ] Windows path-separator audit of every rule in classify.py.
 
 ## Release discipline

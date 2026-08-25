@@ -36,8 +36,10 @@ def repo(tmp_path):
     (root / "src").mkdir(parents=True)
     (root / "src" / "app.py").write_text(SOURCE, encoding="utf-8")
     identity = (
-        "-c", "user.email=test@example.com",
-        "-c", "user.name=Test",
+        "-c",
+        "user.email=test@example.com",
+        "-c",
+        "user.name=Test",
     )
     _git(root, "init", "--initial-branch=main")
     _git(root, *identity, "add", ".")
@@ -50,17 +52,13 @@ def repo(tmp_path):
 def test_ref_base_matches_a_materialised_checkout(repo, capsys):
     """`--delta HEAD` agrees with the classic two-directory invocation."""
     via_ref = None
-    assert (
-        main([str(repo), "--delta", "HEAD", "--json", "--no-color"]) == 0
-    )
+    assert main([str(repo), "--delta", "HEAD", "--json", "--no-color"]) == 0
     payload = capsys.readouterr()
     via_ref = payload.out
     # A second run through the directory path must produce identical JSON.
     export_dir = resolve_ref_tree("HEAD", str(repo))
     try:
-        assert (
-            main([str(repo), "--delta", export_dir, "--json", "--no-color"]) == 0
-        )
+        assert main([str(repo), "--delta", export_dir, "--json", "--no-color"]) == 0
         again = capsys.readouterr().out
     finally:
         pass
@@ -90,9 +88,7 @@ def test_existing_directory_beats_a_same_named_ref(tmp_path, repo):
     assert resolved is None
 
 
-def test_resolution_against_a_non_repository_names_the_real_problem(
-    tmp_path, repo
-):
+def test_resolution_against_a_non_repository_names_the_real_problem(tmp_path, repo):
     plain = tmp_path / "plain"
     plain.mkdir()
     with pytest.raises(RefResolutionError) as raised:

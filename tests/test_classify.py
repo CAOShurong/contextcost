@@ -285,9 +285,7 @@ DIRECTORY_CASES = [
     (
         "snapshot-dir",
         SNAPSHOT,
-        FileCost(
-            "tests\\__snapshots__\\a.py", 400, FILLER_TOKEN_COUNT, "code"
-        ),
+        FileCost("tests\\__snapshots__\\a.py", 400, FILLER_TOKEN_COUNT, "code"),
     ),
     (
         "build-output",
@@ -328,9 +326,7 @@ NAME_CASES = {
 }
 
 
-@pytest.mark.parametrize(
-    "rule,cost", list(NAME_CASES.values()), ids=NAME_CASES.keys()
-)
+@pytest.mark.parametrize("rule,cost", list(NAME_CASES.values()), ids=NAME_CASES.keys())
 def test_a_backslash_path_is_decided_without_crashing(rule, cost):
     """The portable guarantee for an out-of-contract path: the rule reaches
     a verdict without raising, and if it fires it is its own rule."""

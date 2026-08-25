@@ -25,13 +25,37 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 #: as upstream repos evolve). Kept in one place so --check has a single
 #: source to compare against.
 REPOS = [
-    ("plotly.js", "https://github.com/plotly/plotly.js", 63_831_059, 37_008_917, 26_822_142),
+    (
+        "plotly.js",
+        "https://github.com/plotly/plotly.js",
+        63_831_059,
+        37_008_917,
+        26_822_142,
+    ),
     ("dask", "https://github.com/dask/dask", 4_315_000, 2_308_363, 2_006_637),
-    ("pandas", "https://github.com/pandas-dev/pandas", 10_105_577, 7_929_282, 2_176_295),
-    ("keycloak", "https://github.com/keycloak/keycloak", 18_687_556, 17_290_337, 1_397_219),
+    (
+        "pandas",
+        "https://github.com/pandas-dev/pandas",
+        10_105_577,
+        7_929_282,
+        2_176_295,
+    ),
+    (
+        "keycloak",
+        "https://github.com/keycloak/keycloak",
+        18_687_556,
+        17_290_337,
+        1_397_219,
+    ),
     ("rclone", "https://github.com/rclone/rclone", 7_889_210, 6_169_802, 1_719_408),
     ("astropy", "https://github.com/astropy/astropy", 7_881_727, 7_669_606, 212_121),
-    ("contextcost itself", "https://github.com/CAOShurong/contextcost", 161_453, 85_663, 75_790),
+    (
+        "contextcost itself",
+        "https://github.com/CAOShurong/contextcost",
+        161_453,
+        85_663,
+        75_790,
+    ),
 ]
 
 PAGE = """<!doctype html>
@@ -120,7 +144,10 @@ def build(check: bool) -> int:
         with open(path, encoding="utf-8") as handle:
             current = handle.read()
         if current != page:
-            print("docs/index.html is stale. Run: python docs/build_site.py", file=sys.stderr)
+            print(
+                "docs/index.html is stale. Run: python docs/build_site.py",
+                file=sys.stderr,
+            )
             return 1
         print("docs/index.html is up to date.")
         return 0

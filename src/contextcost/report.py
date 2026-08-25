@@ -413,8 +413,7 @@ def _next_steps(reduction: Reduction, ink: _Ink) -> list[str]:
         " then re-measure to confirm the saving.",
         "2. Gate it in CI so it stays saved:"
         " contextcost --fail-over <budget>  (exit 4 when over)",
-        "3. Show it off: contextcost . --markdown --badge  -- paste into"
-        " your README",
+        "3. Show it off: contextcost . --markdown --badge  -- paste into your README",
     ]
     for step in steps:
         lines.append(ink("  " + step, "dim"))

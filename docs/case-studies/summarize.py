@@ -5,6 +5,7 @@ Shared by reproduce.sh so the case-study numbers stay reproducible
 with a single command. Exits 1 with a clear message when the payload
 is missing or malformed.
 """
+
 import json
 import sys
 

@@ -114,9 +114,7 @@ def _export(root: str, commit: str) -> str:
     """Export ``commit``'s tracked files into a fresh temp directory."""
     archive = _run_git(root, "archive", "--format=tar", commit)
     if archive.returncode != 0:
-        raise RefResolutionError(
-            f"cannot export {commit}: {_stderr(archive)}"
-        )
+        raise RefResolutionError(f"cannot export {commit}: {_stderr(archive)}")
     destination = _snapshot_dir(root)
     with tarfile.open(fileobj=io.BytesIO(archive.stdout)) as bundle:
         # `extractall` with a filter refuses absolute paths, `..` segments and

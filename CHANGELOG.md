@@ -8,6 +8,23 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `--delta BASE` and a composite GitHub Action (`CAOShurong/contextcost/action`):
+  the context cost of a *change*, measured the way every other number here is.
+  A pull request is a change to a context budget, and until now nothing in this
+  package could state what one costs -- which left the sentence that sells the
+  tool ("this PR adds +41,882 tokens, 92% of it a lockfile") unsayable. The
+  delta walks a base checkout and the head tree **per file** and compares by
+  path: files only in one tree contribute in full, changed files contribute
+  their difference, unchanged files are not listed. Per-file comparison rather
+  than subtracting two totals means an ignore rule added between base and head
+  shows up as churn on the files it hides instead of vanishing inside a
+  plausible number. Attribution runs the ordinary waste classifiers over the
+  head tree, so "+32k of it is a lockfile" is measured there; anything no rule
+  fires on lands under `unclassified (real work?)`, which is exactly the split
+  a reviewer needs. Output through the existing `--markdown` and `--json`
+  channels (`{"schema": 1, "delta": {...}}`). Verified against two checkouts of
+  this repository with a synthetic lockfile commit: 53,834 → 95,631 tokens,
+  +41,797 attributed 32,232 lockfile / 9,565 unclassified.
 - A `--markdown` report: the same measurement as GitHub-flavoured Markdown,
   for the two places this tool most needs to travel -- a pull-request comment
   and a README. The terminal report pasted into a PR arrives as ANSI escape

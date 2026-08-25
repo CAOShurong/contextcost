@@ -26,6 +26,7 @@ import os
 import sys
 
 from . import __version__
+from .delta import measure_delta
 from .estimate import ERROR_BOUND
 from .ignorefile import CONSUMERS, CONTEXTCOST_IGNORE_FILE, consumer_write_file
 from .json_schema import _contract_text, build_payload
@@ -81,6 +82,15 @@ def _parser() -> argparse.ArgumentParser:
         help=(
             "print the --json key contract and exit; consumers should pin"
             " 'schema' from the output and read this before relying on a key"
+        ),
+    )
+    parser.add_argument(
+        "--delta",
+        metavar="BASE",
+        help=(
+            "measure the context-cost change from BASE (a second checkout of"
+            " the same repository, e.g. the PR's merge base) to PATH;"
+            " print with --json or --markdown"
         ),
     )
     parser.add_argument(
@@ -206,6 +216,76 @@ def _write_gitignore(root: str, reduction) -> str:
     return _write_ignore_file(root, ".gitignore", reduction)
 
 
+def _render_delta_text(delta) -> str:
+    lines = [
+        f"Context cost: {delta.before:,} -> {delta.after:,} tokens"
+        f" (estimated, ±{ERROR_BOUND:.0%}).",
+    ]
+    if delta.added:
+        lines.append(f"  this change adds +{delta.added:,}")
+    if delta.removed:
+        lines.append(f"  this change removes -{delta.removed:,}")
+    if not delta.added and not delta.removed:
+        lines.append("  no net change")
+    if delta.attribution:
+        lines.append("Where added cost goes:")
+        for name, tokens in delta.attribution.items():
+            lines.append(f"  {name:<14} +{tokens:>10,}")
+    return "\n".join(lines)
+
+
+def _render_delta_markdown(delta) -> str:
+    lines = ["## contextcost — context delta", ""]
+    sign = "+" if delta.after >= delta.before else "-"
+    lines.append(
+        f"**{delta.before:,} → {delta.after:,} tokens** "
+        f"({sign}{abs(delta.after - delta.before):,}, estimated ±{ERROR_BOUND:.0%})."
+    )
+    lines.append("")
+    if delta.attribution:
+        lines.append("| rule | tokens | share of repo |")
+        lines.append("| --- | --- | --- |")
+        for name, tokens in delta.attribution.items():
+            share = tokens / delta.after if delta.after else 0.0
+            label = (
+                f"**{name}**"
+                if name != "unclassified"
+                else "unclassified *(real work?)*"
+            )
+            lines.append(f"| {label} | +{_fmt(tokens)} | {share:.0%} |")
+        lines.append("")
+        lines.append(
+            "Attribution is measured by classifying the head tree, not guessed"
+            " from filenames."
+        )
+        lines.append("")
+    top = sorted(delta.files, key=lambda f: -f.tokens)[:8]
+    if top:
+        lines.append("| file | change | tokens |")
+        lines.append("| --- | --- | --- |")
+        for fd in top:
+            arrow = {
+                "added": "added",
+                "removed": "removed",
+                "grown": "grown",
+                "shrunk": "shrunk",
+            }[fd.change]
+            lines.append(f"| `{_esc(fd.path)}` | {arrow} | {_fmt(fd.tokens)} |")
+        remaining = len(delta.files) - len(top)
+        if remaining > 0:
+            lines.append(f"| …and {remaining} more files | | |")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def _fmt(n: int) -> str:
+    return f"{n:,}"
+
+
+def _esc(text: str) -> str:
+    return text.replace("|", "\\|").replace("\n", " ")
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if args.json_schema:
@@ -215,6 +295,23 @@ def main(argv: list[str] | None = None) -> int:
     if not os.path.isdir(root):
         print(f"contextcost: not a directory: {args.path}", file=sys.stderr)
         return 2
+
+    if args.delta:
+        base = os.path.abspath(args.delta)
+        if not os.path.isdir(base):
+            print(
+                f"contextcost: --delta base is not a directory: {args.delta}",
+                file=sys.stderr,
+            )
+            return 2
+        delta = measure_delta(base, root)
+        if args.json:
+            print(json.dumps({"schema": 1, "delta": delta.as_dict()}, indent=2))
+        elif args.markdown and not args.quiet:
+            print(_render_delta_markdown(delta).rstrip())
+        elif not args.quiet:
+            print(_render_delta_text(delta))
+        return 0
 
     use_gitignore = not args.no_gitignore
     walk = walk_repository(root, use_gitignore=use_gitignore, consumer=args.consumer)

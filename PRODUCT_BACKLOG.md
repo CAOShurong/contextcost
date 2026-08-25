@@ -34,7 +34,7 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
-- [ ] GitHub Action `contextcost/action`: on pull_request, comment the
+- [in-progress rev 8] GitHub Action `contextcost/action`: on pull_request, comment the
       delta ("this PR adds +41,882 tokens, 92 % of it a lockfile"). Needs
       `--json` first. This is the growth loop: every install markets the CLI.
 - [done rev 6] `--json` machine output (stable schema, versioned) — prerequisite for

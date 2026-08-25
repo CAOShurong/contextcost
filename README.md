@@ -334,6 +334,45 @@ want the output rather than the verdict, say so:
 contextcost --json > cost.json || true
 ```
 
+## In a pull request
+
+`--delta` measures what a change does to the context budget: it walks a base
+checkout and the head tree per file, compares them by path, and classifies the
+head tree so "+32k of this is a lockfile" is a measurement, not a guess from
+filenames. The bundled Action posts (and keeps updated) that report as a PR
+comment:
+
+```yaml
+# .github/workflows/contextcost.yml in any repository
+name: contextcost
+on: pull_request
+jobs:
+  delta:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: CAOShurong/contextcost/action@main
+```
+
+Or run it by hand against two checkouts of the same repository — for example
+the PR's merge base next to the working tree:
+
+```bash
+contextcost . --delta ../repo-at-merge-base --markdown
+```
+
+```
+## contextcost — context delta
+
+**53,834 → 95,631 tokens** (+41,797, estimated ±14%).
+
+| rule | tokens | share of repo |
+| --- | --- | --- |
+| **lockfile** | +32,232 | 34% |
+| unclassified *(real work?)* | +9,565 | 10% |
+```
+
 ## As a library
 
 ```python
@@ -351,7 +390,7 @@ separately, and every dataclass has `as_dict()`.
 ## Development
 
 ```bash
-python -m pytest -q                      # 147 tests, no configuration needed
+python -m pytest -q                      # 158 tests, no configuration needed
 python -m ruff check src tests docs
 python docs/build_docs.py                # regenerate the figures and README
 python docs/build_docs.py --check        # CI fails if they are stale

@@ -5,6 +5,12 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Dependencies: none](https://img.shields.io/badge/dependencies-none-brightgreen)](pyproject.toml)
 
+<p align="center">
+  <a href="https://caoshurong.github.io/contextcost/">
+    <img src="docs/assets/social-card.png" alt="contextcost — 42% of plotly.js's context budget is dead weight. uvx contextcost ." width="640">
+  </a>
+</p>
+
 **What does it cost an AI agent to read your repository — and how much of
 that is waste?**
 
@@ -487,6 +493,14 @@ gh attestation verify contextcost-0.2.0-py3-none-any.whl \
 The GitHub and PyPI files are built once in the same release workflow. Verify
 the downloaded bytes rather than treating a tag or a green job as proof of the
 artifact you installed.
+
+## Share it
+
+If the number surprised you, it will probably surprise whoever maintains the
+next repository you point this at. The
+[landing page](https://caoshurong.github.io/contextcost/) renders a proper
+preview card when pasted into Slack, Discord, X, or a chat window — no extra
+work needed, just paste the link.
 
 ## Licence
 

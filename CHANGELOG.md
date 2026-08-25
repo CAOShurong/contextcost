@@ -8,6 +8,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Social preview card (`docs/assets/social-card.png`, 1280×640): a real
+  plotly.js measurement (63.8M tokens in, 42% measured saving) rendered as the
+  `og:image` / `twitter:card` of the landing page, so pasting the link into
+  Slack, Discord, X or chat now shows the headline number and terminal
+  screenshot instead of bare text — the repo had zero share-surface before.
+  The card is also embedded at the top of this README. Generated with
+  matplotlib against published case-study numbers; landing page regenerated
+  via `build_site.py` (`--check` stays green).
+
 - Second case study, ten more repositories
   (`docs/case-studies/2026-08-26-ten-more-repos.md`): moby/buildkit **89.5%**
   waste (7.5M vendored + 5.4M generated tokens of a 14.6M-token total),

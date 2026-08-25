@@ -71,7 +71,7 @@ It doesn't pack anything. Run it once, accept the proposal into
 `.contextcostignore` or your consumer's native ignore file
 (`contextcost . --write-ignore`), then gate regressions in CI
 (`contextcost . --fail-over <budget>` or the
-[GitHub Action](https://github.com/CAOShurong/contextcost#github-action)).
+[GitHub Action](https://github.com/CAOShurong/contextcost#in-a-pull-request)).
 Your packing tool keeps doing what it does — just on a tree that isn't
 mostly dead weight.
 

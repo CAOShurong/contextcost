@@ -32,6 +32,7 @@ from .ignorefile import CONSUMERS, CONTEXTCOST_IGNORE_FILE, consumer_write_file
 from .json_schema import _contract_text, build_payload
 from .markdown import render_markdown
 from .reduce import reduce_repository
+from .refsnapshot import RefResolutionError, resolve_ref_tree
 from .report import render, supports_colour, supports_unicode
 from .walk import walk_repository
 
@@ -95,9 +96,11 @@ def _parser() -> argparse.ArgumentParser:
         "--delta",
         metavar="BASE",
         help=(
-            "measure the context-cost change from BASE (a second checkout of"
-            " the same repository, e.g. the PR's merge base) to PATH;"
-            " print with --json or --markdown"
+            "measure the context-cost change from BASE to PATH; BASE is a"
+            " second checkout of the same repository (e.g. the PR's merge"
+            " base) or a git revision of PATH such as 'main' or 'HEAD~1'"
+            " -- revisions are exported automatically, no second clone"
+            " needed; print with --json or --markdown"
         ),
     )
     parser.add_argument(
@@ -342,11 +345,21 @@ def main(argv: list[str] | None = None) -> int:
     if args.delta:
         base = os.path.abspath(args.delta)
         if not os.path.isdir(base):
-            print(
-                f"contextcost: --delta base is not a directory: {args.delta}",
-                file=sys.stderr,
-            )
-            return 2
+            # Not a directory on disk: offer it to git as a revision before
+            # giving up. A ref exports into a temp tree that is removed at
+            # exit, so `--delta main` needs no second checkout.
+            try:
+                resolved = resolve_ref_tree(args.delta, root)
+            except RefResolutionError as error:
+                print(f"contextcost: {error}", file=sys.stderr)
+                return 2
+            if resolved is None:
+                print(
+                    f"contextcost: --delta base is not a directory: {args.delta}",
+                    file=sys.stderr,
+                )
+                return 2
+            base = os.path.abspath(resolved)
         delta = measure_delta(base, root)
         if args.json:
             print(json.dumps({"schema": 1, "delta": delta.as_dict()}, indent=2))

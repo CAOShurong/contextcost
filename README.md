@@ -366,11 +366,20 @@ jobs:
       - uses: CAOShurong/contextcost/action@main
 ```
 
-Or run it by hand against two checkouts of the same repository — for example
-the PR's merge base next to the working tree:
+Or run it by hand. The base can be a second checkout of the same repository —
+for example the PR's merge base next to the working tree:
 
 ```bash
 contextcost . --delta ../repo-at-merge-base --markdown
+```
+
+— or simply a git revision of the repository being measured, which is
+exported automatically (no second clone, no worktree):
+
+```bash
+contextcost . --delta main            # uncommitted changes vs the branch
+contextcost . --delta HEAD~1          # what the last commit did to the budget
+contextcost repo/ --delta v4.0.0      # a tagged release vs its checkout
 ```
 
 ```

@@ -34,6 +34,14 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done rev 155] `--delta` accepts a git revision as BASE (`contextcost .
+      --delta main`): the ref is exported via `git archive` into a temp tree
+      removed at exit, so measuring a PR's cost needs no second clone.
+      Directory beats same-named ref; unknown ref exits 2 with git's own
+      message. (Shipped: refsnapshot.py + CLI wiring, 7 new tests; verified
+      on this repo --delta HEAD (+2,517 uncommitted) and plotly.js --delta
+      v4.0.0-rc.0 (+645,796 / 179 files).)
+
 - [done rev 8] GitHub Action `contextcost/action`: on pull_request, comment the
       delta ("this PR adds +41,882 tokens, 92 % of it a lockfile"). Needs
       `--json` first. This is the growth loop: every install markets the CLI.

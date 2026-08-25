@@ -6,6 +6,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `--delta` now accepts a git revision as its base, so measuring a change no
+  longer requires a second checkout. When the base argument is not a
+  directory on disk, it is offered to git as a revision of the repository
+  being measured (`main`, `HEAD~1`, a tag, the PR's merge base) and the
+  commit's tracked files are exported with `git archive` into a temporary
+  tree that is removed at exit. The comparison itself is unchanged — two
+  ordinary directories walked by the same code, so a ref delta and a
+  two-checkout delta cannot disagree. A real directory always beats a ref
+  with the same name (paths win over revisions), an unknown revision exits 2
+  carrying git's own complaint rather than silently comparing against
+  nothing, and a base given for a non-repository names that fact instead.
+  Seven new tests; suite green (191 passed, 1 skipped without the optional
+  tokenizer); verified live on this repo (`--delta HEAD`:
+  +2,517 tokens from uncommitted work) and plotly.js (`--delta
+  v4.0.0-rc.0`: +645,796 tokens across 179 files, 89% of the addition in
+  build output and minified bundles).
+
 ## [0.5.0] - 2026-08-25
 
 ### Added

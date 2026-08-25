@@ -5,6 +5,6 @@ breakdown, get a set of proposed exclusions, and get the saving those
 exclusions actually produce when the repository is walked again.
 """
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 __all__ = ["__version__"]

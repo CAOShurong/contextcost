@@ -65,7 +65,7 @@ methodology is the moat; everything below strengthens or distributes it.
       protocol initialize/ping/tools.list/tools.call, errors-as-data; 18
       tests; live-verified on plotly.js stdio session — estimate
       63.83 M tokens, propose 26.8 M saved / 42 %, bad path −32603.)
-- [ ] Docs page "Use with coding agents": copy-paste configs for Claude
+- [in-progress rev 10] Docs page "Use with coding agents": copy-paste configs for Claude
       Code, Cursor, Codex.
 
 ## P3 — hygiene

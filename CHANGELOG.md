@@ -8,6 +8,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- A docs page for coding agents (`docs/coding-agents.md`): copy-paste MCP
+  configs for Claude Code (`claude mcp add` command + committed
+  `.mcp.json`), Cursor (`.cursor/mcp.json`) and Codex CLI
+  (`codex mcp add` + `~/.codex/config.toml`), plus a ready-to-use prompt.
+  The MCP server was unusable by anyone who did not already know each
+  client's config format; this is the distribution half of the MCP feature.
+  Config formats verified against current client docs (2026-08); the page
+  links from the README's "As an MCP server" section.
+
 - An MCP server (`contextcost mcp`, stdio): a coding agent that must shell out
   to contextcost has to guess at flags and parse human output; one that speaks
   MCP calls the same measurement and gets the schema-versioned JSON in band.

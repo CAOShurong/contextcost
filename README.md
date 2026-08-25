@@ -405,8 +405,9 @@ ignore block. Stdio transport, stdlib-only JSON-RPC 2.0 — no SDK dependency:
  "params": {"name": "estimate", "arguments": {"repo": "/path/to/repo"}}}
 ```
 
-Claude Code (`claude mcp add contextcost -- contextcost mcp`) and any other
-MCP client then get "what does this repo cost and what is wasting it" as a
+Claude Code, Cursor and Codex CLI each take a two-line config — copy-paste
+blocks live in [docs/coding-agents.md](docs/coding-agents.md). Any MCP
+client then gets "what does this repo cost and what is wasting it" as a
 tool call beside the model.
 
 ## Development

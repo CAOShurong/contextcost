@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- An MCP server (`contextcost mcp`, stdio): a coding agent that must shell out
+  to contextcost has to guess at flags and parse human output; one that speaks
+  MCP calls the same measurement and gets the schema-versioned JSON in band.
+  Two tools -- `estimate` (the full `--json` payload) and `propose` (the
+  measured exclusion proposal with a ready-to-paste ignore block) -- exposed
+  over JSON-RPC 2.0 in ~150 lines of stdlib `json`/`sys`, so the
+  zero-dependency install promise holds without the official SDK.
+  Protocol coverage is deliberately minimal (`initialize`, `ping`,
+  `tools/list`, `tools/call`); notifications get no reply per the spec, parse
+  errors answer `-32700` with the session continuing, unknown methods
+  `-32601` so a client can degrade gracefully, and tool errors surface as
+  data (`-32603` "not a directory") instead of killing the pipe -- an agent
+  that mistypes a path sees the mistake, not a confident zero-cost report.
+  Verified against plotly.js over a real stdio session:
+  `estimate` → 63,831,059 tokens ±14 % across 4,063 files,
+  `propose` → 26,822,142 saved / 42 % measured, 158 patterns;
+  bad path → `-32603 NotADirectoryError`; garbage line → `-32700`;
+  `resources/list` → `-32601`. 18 tests in `tests/test_mcp.py`.
+
 ## [0.4.0] - 2026-08-25
 
 ### Added

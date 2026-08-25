@@ -58,9 +58,13 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P2 — agent-native surface
 
-- [in-progress rev 9] MCP server mode (`contextcost mcp`, stdio): tools
+- [done rev 9] MCP server mode (`contextcost mcp`, stdio): tools
       `estimate(repo)` and `propose(repo)` so Claude/Cursor agents call it
       directly. Stdlib JSON-RPC only — keep the zero-dep core intact.
+      (Shipped aefd046: mcp_server.py ~150 lines stdlib-only, minimal
+      protocol initialize/ping/tools.list/tools.call, errors-as-data; 18
+      tests; live-verified on plotly.js stdio session — estimate
+      63.83 M tokens, propose 26.8 M saved / 42 %, bad path −32603.)
 - [ ] Docs page "Use with coding agents": copy-paste configs for Claude
       Code, Cursor, Codex.
 

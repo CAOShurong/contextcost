@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- README rewritten to lead with the answer instead of the mechanism. The hero
+  is now real output from a full plotly.js checkout (`71a2ff7`, 2026-08-24):
+  63,831,059 tokens to read, 26.8M of it (42%) measured waste — compiled
+  bundles under `dist/` and recorded numeric test fixtures — with the
+  `uvx contextcost .` one-liner as the first actionable thing a visitor sees.
+  The estimate's credibility is shown, not asserted: `--accurate` counted
+  63,363,404 exact (cl100k_base), so the headline estimate landed 0.7% off
+  against its ±14% bound. The old synthetic example output moved out of the
+  first screen; the generated figures and their `build_docs.py --check`
+  contract are unchanged.
+
 ### Added
 
 - A next-steps hook at the end of the terminal report. When a proposal exists,

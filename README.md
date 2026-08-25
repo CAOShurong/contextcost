@@ -5,53 +5,75 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Dependencies: none](https://img.shields.io/badge/dependencies-none-brightgreen)](pyproject.toml)
 
-**What does this repository cost an AI coding agent to read, and what is
-wasting that budget?**
+**What does it cost an AI agent to read your repository — and how much of
+that is waste?**
 
-Point it at a repository. It measures what reading that repository costs in
-tokens, works out which files are spending that budget without earning it, and
-then — the part nobody else does — **applies its own proposal and measures the
-result again**, so the saving it reports is a difference between two
-measurements rather than a sum of its own opinions.
+```bash
+uvx contextcost .          # no install, no config, results in seconds
+```
+
+## The 3-second version
+
+Real output on [plotly.js](https://github.com/plotly/plotly.js) (full public
+checkout at `71a2ff7`, 2026-08-24, contextcost v0.5.0):
 
 ```console
-$ contextcost .
+$ contextcost plotly.js/
 
-contextcost  ~/work/example
-
-  74,318 tokens to read this repository   ±12% estimated, no tokenizer
-  12 text files · 1 binary not counted · 3 paths ignored
+  63,831,059 tokens to read this repository   ±14% estimated, no tokenizer
+  2717 text files · 1346 binaries not counted · 6 paths ignored
 
 WHERE IT GOES
-  (root)                    41,882  ████████████████████████████  56%
-  vendor                    12,704  ████████·····················  17%
-  src                        9,331  ██████·······················  13%
+  test                   35,583,286  ████████████████████████████  56%
+  dist                   24,598,872  ███████████████████·········  39%
+  src                     1,596,194  █···························   3%
 
-CANDIDATE CONTEXT WASTE
-  certain  lockfile         38,905  1 file
-             38,905  package-lock.json
-                      package-lock.json is written by a package manager
-  likely   vendored         12,704  2 files
-             7,110  vendor/legacy/helpers.js
-                      inside a directory named vendor/
+LARGEST FILES
+  4,578,500  test/image/mocks/gl3d_snowden_altered.json  sampled
+  4,578,201  test/image/mocks/gl3d_snowden.json  sampled
+  2,593,972  dist/plotly-strict.js  sampled
 
 SAVING
-  74,318 → 15,033 tokens   80% saved
+  63,831,059 → 37,008,917 tokens   42% saved
   Measured by walking the repository again with the proposal applied,
   not by subtracting what was dropped.
-
-  Add to .gitignore (or run with --write-gitignore):
-    /package-lock.json
-    /vendor/
 ```
+
+**26.8 million tokens of that repository's reading cost is compiled bundles,
+recorded test fixtures, and generated files** — enough to fill a frontier
+model's 200K-token context window about **134 times**, spent mostly on JSON
+number matrices and minified output. An agent asked to fix a chart bug reads
+none of it usefully.
+
+And the estimate is trustworthy: re-run with `--accurate`, the real tokenizer
+(cl100k_base) counts **63,363,404** tokens — the estimate above landed 0.7%
+off, well inside its stated ±14% band. On data-heavy repositories that gap is
+exactly the thing naive character-counting gets wrong by 30–70%.
+
+The "42%" is not a sum of opinions. The tool proposes cuts, then *walks the
+repository a second time with the proposal applied*, so the saving is the
+difference between two measurements — and if a pattern had caught anything it
+wasn't supposed to, you'd see the narrowing in the report. This scales down
+too: [seven real repos measured](docs/case-studies/2026-08-25-seven-repos.md)
+ran from **46.5% waste (dask) to 2.7% (astropy)** — clean repos correctly get
+told they're clean.
+
+Point it at any repository. It measures what reading that repository costs in
+tokens, works out which files are spending that budget without earning it, and
+then re-measures the result — so every number it reports is one it observed.
+
 
 ## Install
 
 ```bash
+# try it on any repo right now, nothing installed:
+uvx contextcost .
+
+# or install it:
 pip install contextcost
 ```
 
-No dependencies. Python 3.9+.
+No dependencies. Python 3.9+. Also works with `pipx run contextcost .`.
 
 ## Why this exists
 
@@ -433,7 +455,7 @@ tool call beside the model.
 ## Development
 
 ```bash
-python -m pytest -q                      # 181 tests, no configuration needed
+python -m pytest -q                      # 196 tests, no configuration needed
 python -m ruff check src tests docs
 python docs/build_docs.py                # regenerate the figures and README
 python docs/build_docs.py --check        # CI fails if they are stale

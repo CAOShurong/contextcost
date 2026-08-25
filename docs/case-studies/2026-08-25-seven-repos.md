@@ -32,6 +32,7 @@ contextcost works in three steps:
 | keycloak | 13,349 | 18,687,556 | 17,290,337 | 1,397,219 | 7.5% |
 | rclone | 2,606 | 7,889,210 | 6,169,802 | 1,719,408 | 21.8% |
 | astropy | 1,964 | 7,881,727 | 7,669,606 | 212,121 | 2.7% |
+| contextcost itself | 54 | 161,453 | 85,663 | 75,790 | 46.9% |
 
 (All figures from `contextcost <repo> --json`, estimate tier, ±14% measured
 error bound. The saving column is *measured* by re-walking each repository
@@ -62,6 +63,11 @@ hygiene has almost nothing to cut. The tool found 212K tokens of dense data
 files, and correctly did *not* propose removing them automatically — large
 data is flagged as "your decision", because the file system cannot prove a
 data file is useless.
+
+**contextcost itself — 46.9%, the highest share of all seven.** A young repo
+with a single `uv.lock` (75,790 tokens) that is nearly half of its own
+context cost. Included deliberately: the tool flags its authors' repository
+just as bluntly as anyone else's, and the fix was one line in `.gitignore`.
 
 ## Why this matters more than it looks
 
@@ -96,7 +102,11 @@ Methodology notes, for the skeptical: estimates carry a ±14% error bound
 (measured against cl100k_base during calibration; a `numeric` content class
 keeps data-heavy repos inside it). Savings are differences of two walks, so
 they are exact at the file level regardless. Everything above is reproducible
-from the linked repository.
+from the linked repository — and the table itself with one command:
+`bash docs/case-studies/reproduce.sh` re-measures all seven checkouts and
+prints the same columns (numbers drift by a fraction of a percent as the
+upstream repositories evolve; the saved-token figures have matched on every
+re-run).
 
 ---
 

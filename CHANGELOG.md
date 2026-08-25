@@ -4,7 +4,19 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.1] - 2026-08-25
+## [Unreleased]
+
+### Changed
+
+- Case study made self-verifying. The seven-repo table had silently dropped
+  its seventh row (contextcost itself, 161,453 → 85,663 tokens, 46.9% saved —
+  the highest share of all seven); the row and a short section are restored,
+  with numbers re-measured live via the new `docs/case-studies/reproduce.sh`,
+  which re-runs all seven checkouts in one command (`summarize.py` renders
+  each `--json` payload into one table row; contextcost's exit-1-on-waste
+  convention is handled explicitly). Reproduction run on 2026-08-25 matched
+  every published saved-token figure exactly (rclone/contextcost totals
+  drifted <0.1% with upstream evolution).
 
 ### Changed
 

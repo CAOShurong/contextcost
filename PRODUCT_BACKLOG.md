@@ -99,6 +99,11 @@ Ship v0.4.0 when P0 + `--json` land (feature release), then v0.5.0 with the
 Action + MCP. Every release: changelog entry, tag, PyPI upload, README demo
 refresh if output shape changed.
 
+- [done rev 154] v0.5.0 shipped 2026-08-25: tag `v0.5.0`, release workflow
+      green end to end (test matrix ubuntu/windows × py3.9/3.14, twine
+      --strict, PyPI trusted publish), live-verified on PyPI (`latest: 0.5.0`)
+      and GitHub Release (wheel + sdist + SHA256SUMS + attestations).
+
 ## Explicitly rejected (for now)
 
 - Tokenizer-accurate by default (breaks zero-dep promise).

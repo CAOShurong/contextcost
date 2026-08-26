@@ -16,6 +16,8 @@ produce, so that a future edit that quietly breaks script detection fails here
 rather than in somebody's report.
 """
 
+import os as _os
+
 import pytest
 
 from contextcost.estimate import (
@@ -250,9 +252,9 @@ def test_utf8_text_is_not_mistaken_for_binary():
 # generic structured ratio (3.38) it under-counted by ~35%; the regression
 # this guards against is a repository dominated by a lockfile breaching the
 # printed band the moment anyone verified it.
-import os as _os
-
-_SAMPLES = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "docs", "calibration-samples")
+_SAMPLES = _os.path.join(
+    _os.path.dirname(_os.path.dirname(__file__)), "docs", "calibration-samples"
+)
 
 
 def test_real_lockfiles_are_charged_the_hashy_ratio():
@@ -286,7 +288,10 @@ def test_genuine_manifest_stays_structured_not_hashy():
     from contextcost.estimate import _dense_ratio
 
     ratio = _dense_ratio(manifest)
-    from contextcost.estimate import DENSE_STRUCTURED_RATIO, DENSE_HASHY_RATIO
+    from contextcost.estimate import (
+        DENSE_HASHY_RATIO,
+        DENSE_STRUCTURED_RATIO,
+    )
 
     assert ratio == DENSE_STRUCTURED_RATIO
     assert ratio != DENSE_HASHY_RATIO

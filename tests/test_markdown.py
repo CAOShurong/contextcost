@@ -40,7 +40,9 @@ def test_headline_carries_the_error_bound(tmp_path):
     assert "tokens" in text
     from contextcost.estimate import ERROR_BOUND
 
-    assert f"\u00b1{ERROR_BOUND:.0%}" in text, "an estimate without its bound gets quoted without one"
+    assert f"\u00b1{ERROR_BOUND:.0%}" in text, (
+        "an estimate without its bound gets quoted without one"
+    )
 
 
 def test_tables_render_as_pipe_tables(tmp_path):

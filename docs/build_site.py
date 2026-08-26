@@ -48,7 +48,13 @@ REPOS = [
         23_737_443,
         29_977_946,
     ),
-    ("astral-sh/uv", "https://github.com/astral-sh/uv", 8_855_618, 4_331_842, 4_523_776),
+    (
+        "astral-sh/uv",
+        "https://github.com/astral-sh/uv",
+        8_855_618,
+        4_331_842,
+        4_523_776,
+    ),
     (
         "astral-sh/ruff",
         "https://github.com/astral-sh/ruff",

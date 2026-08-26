@@ -68,7 +68,8 @@ CONTRACT: dict[str, dict[str, Any]] = {
     },
     "error_bound": {
         "type": "float",
-        "desc": "measured relative error bound of the estimate (e.g. 0.25; see ERROR_BOUND)",
+        "desc": "measured relative error bound of the estimate "
+        "(e.g. 0.25; see ERROR_BOUND)",
     },
     "by_directory": {
         "type": "object[str -> int]",

@@ -304,7 +304,11 @@ def _dense_ratio(text: str) -> float:
     if share < DENSE_PUNCTUATION:
         return DENSE_OPAQUE_RATIO
     hashy = sum(1 for ch in text if ch in ":=-/._")
-    return DENSE_HASHY_RATIO if hashy / marks >= DENSE_HASHY_PUNCTUATION else DENSE_STRUCTURED_RATIO
+    return (
+        DENSE_HASHY_RATIO
+        if hashy / marks >= DENSE_HASHY_PUNCTUATION
+        else DENSE_STRUCTURED_RATIO
+    )
 
 
 def _traditional_share(text: str) -> float:

@@ -22,3 +22,11 @@ HANDOFF.md
 OVERNIGHT-PROMPT.md
 NIGHT-LOG.md
 MORNING-REPORT.md
+
+# The tool's own recommendation, applied to the tool: a lockfile is
+# machine-written, no reader needs it in context, and by 2026-08-26 it had
+# grown to 116,440 tokens -- 51% of this repository's entire context cost,
+# larger than everything else combined. The seven-repos case study claimed
+# this fix existed; measuring again showed it had never been committed. Now
+# it is.
+/uv.lock

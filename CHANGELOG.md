@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **This repository now follows its own recommendation — for real, not just in
+  prose.** The [seven-repositories case
+  study](docs/case-studies/2026-08-25-seven-repos.md) claimed the tool's own
+  `uv.lock` finding had been fixed with "one line in `.gitignore`"; measuring
+  again showed that line had never been committed, and the lockfile had grown
+  to **116,440 tokens — 51% of the entire tree** (226,143 tokens before any
+  cut, measured proposal 55%). `/uv.lock` is now actually ignored. The same
+  walk on the fixed tree reads 109,797 tokens with a 7.2% proposal; the README
+  hero table and the landing page carry the corrected figures, and the case
+  study gained a postscript stating plainly that its original claim was false.
+  A published number that a fresh clone cannot reproduce is exactly the
+  failure this tool exists to catch — it should never survive on its own
+  repository.
+
 ## [0.5.2] - 2026-08-26
 
 ### Added

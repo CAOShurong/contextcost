@@ -64,10 +64,10 @@ files, and correctly did *not* propose removing them automatically — large
 data is flagged as "your decision", because the file system cannot prove a
 data file is useless.
 
-**contextcost itself — 46.9%, the highest share of all seven.** A young repo
-with a single `uv.lock` (75,790 tokens) that is nearly half of its own
+**contextcost itself — 46.9% at the time of writing, the highest share of all
+seven.** A young repo with a single `uv.lock` (75,790 tokens) that is nearly half of its own
 context cost. Included deliberately: the tool flags its authors' repository
-just as bluntly as anyone else's, and the fix was one line in `.gitignore`.
+just as bluntly as anyone else's.
 
 ## Why this matters more than it looks
 
@@ -107,6 +107,22 @@ from the linked repository — and the table itself with one command:
 prints the same columns (numbers drift by a fraction of a percent as the
 upstream repositories evolve; the saved-token figures have matched on every
 re-run).
+
+## Postscript: this repository's own number is now different
+
+An honest postscript, added 2026-08-26. The paragraph above claimed "the fix
+was one line in `.gitignore`" — **and that line had never been committed.**
+Re-running contextcost on this repository found `uv.lock` grown to 116,440
+tokens: 51% of the entire tree, 226,143 tokens before any cut, with a measured
+proposal of **55%.** A tool whose pitch is "every number it reports is one it
+observed" had published a claim about itself that a fresh clone would not
+reproduce.
+
+The line is committed now. The same measurement on the fixed tree:
+109,797 tokens to read this repository, proposal 101,946, saving 7,851 —
+**7.2%**. The README's hero table carries the corrected figure; this post's
+table above stays as first published, because rewriting a published result
+would be its own kind of dishonesty.
 
 ---
 

@@ -32,7 +32,7 @@ second time**, never added up from guesses:
 | [sharkdp/bat](https://github.com/sharkdp/bat) | 53,715,389 | 29,977,946 | **55.8%** |
 | [astral-sh/uv](https://github.com/astral-sh/uv) | 8,855,618 | 4,523,776 | 51.1% |
 | [astral-sh/ruff](https://github.com/astral-sh/ruff) | 20,666,629 | 10,384,853 | 50.2% |
-| [contextcost (this repo)](https://github.com/CAOShurong/contextcost) | 161,453 | 75,790 | 46.9% |
+| [contextcost (this repo)](https://github.com/CAOShurong/contextcost) | 109,797 | 7,851 | 7.2% |
 | [dask/dask](https://github.com/dask/dask) | 4,315,000 | 2,006,637 | 46.5% |
 | [plotly/plotly.js](https://github.com/plotly/plotly.js) | 63,831,059 | 26,822,142 | 42.0% |
 | [gitleaks/gitleaks](https://github.com/gitleaks/gitleaks) | 301,132 | 101,742 | 33.8% |

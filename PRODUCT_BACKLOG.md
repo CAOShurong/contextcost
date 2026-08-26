@@ -34,6 +34,20 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done 2026-08-26f] Integrity repair: this repository now actually follows its
+      own recommendation. The seven-repos case study claimed contextcost's own
+      `uv.lock` finding had been fixed with "one line in `.gitignore`" —
+      measuring again showed that line had never been committed; the lockfile
+      had grown to 116,440 tokens = 51% of the tree (226,143 before cut,
+      proposal 55%, worse than any of the seven published repos). Shipped:
+      `/uv.lock` ignored for real; same walk now 109,797 tokens, proposal 7.2%
+      (CI uses `pip install .`, nothing consumes uv.lock); README hero row and
+      landing-page self-row re-measured and corrected (was 161,453/46.9% and
+      175,189/47.6% — three different stale numbers across surfaces, all
+      wrong); case study gains an honest postscript instead of a silent edit;
+      CHANGELOG Unreleased entry records it. 203 tests pass,
+      `docs/build_docs.py --check` green. Lesson: self-referential claims need
+      a check like any other number.
 - [done 2026-08-26e] Third case study published + v0.5.2 released: the
       exact-counts post (`docs/case-studies/2026-08-26-exact-counts.md`) and
       `reproduce.sh --accurate` support existed only as uncommitted drafts —

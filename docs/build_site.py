@@ -122,13 +122,15 @@ REPOS = [
         2_989,
     ),
     # contextcost itself, measured last so the tool's own tree is stable
-    # under this edit (2026-08-26 live run: 65 files, 47.6%).
+    # under this edit (2026-08-26, after /uv.lock landed in .gitignore:
+    # before the fix the same walk measured 226,143 tokens with a 55%
+    # proposal -- the lockfile alone was 116,440 tokens, 51% of the repo).
     (
         "contextcost itself",
         "https://github.com/CAOShurong/contextcost",
-        175_189,
-        91_872,
-        83_317,
+        109_797,
+        101_946,
+        7_851,
     ),
 ]
 

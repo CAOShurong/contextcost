@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # Reproduce every number in docs/case-studies/2026-08-25-seven-repos.md
 # (and docs/case-studies/2026-08-26-ten-more-repos.md, whose repositories are
-# in the second list below).
+# in the second list below). Pass --accurate as the first argument to
+# reproduce the exact cl100k_base counts in
+# docs/case-studies/2026-08-26-exact-counts.md instead (slower: tokenizes
+# every file with tiktoken).
 #
-# Usage:   bash docs/case-studies/reproduce.sh [path-to-checkouts-parent]
+# Usage:   bash docs/case-studies/reproduce.sh [--accurate] [path-to-checkouts-parent]
 # Default parent: the layout used for the original measurements
 # (E:/Codex/Projects, i.e. <parent>/plotly/plotly.js, <parent>/dask/dask, ...).
 #
@@ -16,6 +19,11 @@
 # waste to propose — both are expected here; anything >= 2 is a real error.
 set -u
 
+ACCURATE=0
+if [ "${1:-}" = "--accurate" ]; then
+  ACCURATE=1
+  shift
+fi
 PARENT="${1:-E:/Codex/Projects}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 case "$HERE" in
@@ -55,7 +63,11 @@ printf "%-20s %12s %12s %12s %7s\n" REPO BEFORE AFTER SAVED SHARE
 failed=0
 measure() {  # measure NAME PATH
   rc=0
-  uvx contextcost "$2" --json >"$tmp" 2>/dev/null || rc=$?
+  if [ "$ACCURATE" = 1 ]; then
+    uvx --from "contextcost[accurate]" contextcost --accurate "$2" --json >"$tmp" 2>/dev/null || rc=$?
+  else
+    uvx contextcost "$2" --json >"$tmp" 2>/dev/null || rc=$?
+  fi
   if [ "$rc" -ge 2 ]; then
     echo "error: $1: contextcost exited $rc" >&2
     failed=1
@@ -74,6 +86,10 @@ measure contextcost "$self_repo"
 
 echo
 echo "Notes:"
-echo "  - estimate tier (±14% measured bound); add --accurate for exact cl100k_base counts"
+if [ "$ACCURATE" = 1 ]; then
+  echo "  - exact tier (cl100k_base; files above 2 MiB counted from a marked prefix sample)"
+else
+  echo "  - estimate tier (±23% measured bound); add --accurate for exact cl100k_base counts"
+fi
 echo "  - 'after' re-walks the repository with the proposal applied (measured, not subtracted)"
 exit "$failed"

@@ -4,7 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.2] - 2026-08-26
+
+### Added
+
+- Third case study, [`docs/case-studies/2026-08-26-exact-counts.md`](docs/case-studies/2026-08-26-exact-counts.md):
+  plotly.js, rclone and astropy re-measured with **exact cl100k_base counts**
+  via `--accurate`, so the published savings no longer rest on the estimator.
+  Includes an honesty check — every estimate landed inside its ±23% band
+  (plotly.js 1.2%, rclone 17.0%, astropy 8.9% drift). Reproduce with
+  `bash docs/case-studies/reproduce.sh --accurate <checkouts-parent>`.
 
 ### Fixed
 

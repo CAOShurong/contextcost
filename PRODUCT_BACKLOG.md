@@ -34,6 +34,20 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done 2026-08-26j] Release v0.5.3: the PyPI project page had fallen behind
+      main. v0.5.2 was tagged *before* the 17-repo hero table (47bbb7c), the
+      real `/uv.lock` ignore (9cbc2e1) and the ±23% recalibration (4bb6337)
+      landed, so the one distribution surface that is always on showed no
+      headline table and still printed ±14% — contradicting what the tool
+      itself reports ("within its ±23% band") at the exact moment a cold
+      reader compares them. Shipped 79022be + tag v0.5.3: version bump +
+      CHANGELOG entry only, zero code change; release workflow green
+      end-to-end; verified live on PyPI (`latest: 0.5.3`, hero table present,
+      stale bound text gone); cold-user path re-checked (`uvx --refresh
+      contextcost --version` → 0.5.3, self-measure JSON schema 1, measured
+      saving reproduced: 112,133 → 103,567 tokens, 7.6%). Lesson: a
+      README-only change still needs its own release to reach PyPI — tag
+      ordering matters as much as tag content.
 - [done 2026-08-26i] Profile freshness pass: the "Latest changes" section in
       CAOShurong/CAOShurong had gone stale against its own rule (newest
       release *or* substantive commit per repo). Audited the local git log of

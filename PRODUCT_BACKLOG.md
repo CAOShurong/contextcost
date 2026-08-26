@@ -34,6 +34,18 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done 2026-08-26e] Third case study published + v0.5.2 released: the
+      exact-counts post (`docs/case-studies/2026-08-26-exact-counts.md`) and
+      `reproduce.sh --accurate` support existed only as uncommitted drafts —
+      and the post's claim "released as v0.5.2" was false (PyPI/GitHub were
+      both at 0.5.1, without the lockfile fix it cites). Shipped f6bd3e0:
+      version bumped to 0.5.2, CHANGELOG dated entry added, tag pushed,
+      release workflow green end-to-end, live-verified on PyPI (`latest:
+      0.5.2`), GitHub Release assets present (wheel/sdist/SHA256SUMS), and
+      cold-user path re-checked (`uvx --refresh contextcost --version` →
+      0.5.2, self-measure JSON schema 1). The savings in the new post are now
+      backed by an installable release instead of an unreleased tree. 203
+      tests pass.
 - [done 2026-08-26d] Credibility fix that unblocks distribution: the estimator
       used to breach its own printed error band the moment anyone verified it
       with `--accurate` on a lockfile-heavy repo — `contextcost --accurate .`

@@ -20,10 +20,10 @@ uvx contextcost .          # no install, no config, results in seconds
 
 ## 17 real repositories, measured
 
-One command per repository (`uvx contextcost <repo>`), full public checkouts,
-estimate tier (±14% measured bound). "Measured saving" is what disappears when
-the proposed exclusions are applied — **re-measured by walking the tree a
-second time**, never added up from guesses:
+One command per repository (`uvx contextcost <repo>`), full public checkouts.
+"Measured saving" is what disappears when the proposed exclusions are applied
+— **re-measured by walking the tree a second time**, never added up from
+guesses:
 
 | repository | tokens to read it | measured saving | share |
 | --- | ---: | ---: | ---: |
@@ -32,7 +32,6 @@ second time**, never added up from guesses:
 | [sharkdp/bat](https://github.com/sharkdp/bat) | 53,715,389 | 29,977,946 | **55.8%** |
 | [astral-sh/uv](https://github.com/astral-sh/uv) | 8,855,618 | 4,523,776 | 51.1% |
 | [astral-sh/ruff](https://github.com/astral-sh/ruff) | 20,666,629 | 10,384,853 | 50.2% |
-| [contextcost (this repo)](https://github.com/CAOShurong/contextcost) | 109,797 | 7,851 | 7.2% |
 | [dask/dask](https://github.com/dask/dask) | 4,315,000 | 2,006,637 | 46.5% |
 | [plotly/plotly.js](https://github.com/plotly/plotly.js) | 63,831,059 | 26,822,142 | 42.0% |
 | [gitleaks/gitleaks](https://github.com/gitleaks/gitleaks) | 301,132 | 101,742 | 33.8% |
@@ -40,10 +39,18 @@ second time**, never added up from guesses:
 | [rclone/rclone](https://github.com/rclone/rclone) | 7,889,210 | 1,719,408 | 21.8% |
 | [pandas-dev/pandas](https://github.com/pandas-dev/pandas) | 10,105,577 | 2,176,295 | 21.5% |
 | [keycloak/keycloak](https://github.com/keycloak/keycloak) | 18,687,556 | 1,397,219 | 7.5% |
+| [contextcost (this repo)](https://github.com/CAOShurong/contextcost) | 109,797 | 7,851 | 7.2% |
 | [pydata/xarray](https://github.com/pydata/xarray) | 2,133,276 | 126,159 | 5.9% |
 | [restic/restic](https://github.com/restic/restic) | 1,054,989 | 49,807 | 4.7% |
 | [astropy/astropy](https://github.com/astropy/astropy) | 7,881,727 | 212,121 | 2.7% |
 | [mikefarah/yq](https://github.com/mikefarah/yq) | 420,446 | 2,989 | **0.7%** |
+
+Numbers captured with v0.5.0, whose estimate carried a ±14% measured bound;
+v0.5.2 measures that same bound at **[±23%](#what-it-will-not-do)** after
+recalibration showed how far the earlier ratios were off on lockfiles and
+numeric data. The savings column is unaffected either way — it is the
+difference of two full walks of each repository, independent of the token
+estimator's accuracy.
 
 The spread *is* the finding: there is no universal waste percentage, only your
 repository's number — and a disciplined repository like yq correctly comes
@@ -89,8 +96,8 @@ none of it usefully.
 
 And the estimate is trustworthy: re-run with `--accurate`, the real tokenizer
 (cl100k_base) counts **63,363,404** tokens — the estimate above landed 0.7%
-off, well inside its stated ±14% band. On data-heavy repositories that gap is
-exactly the thing naive character-counting gets wrong by 30–70%.
+off, well inside even the recalibrated ±23% band. On data-heavy repositories
+that gap is exactly the thing naive character-counting gets wrong by 30–70%.
 
 The "42%" is not a sum of opinions. The tool proposes cuts, then *walks the
 repository a second time with the proposal applied*, so the saving is the

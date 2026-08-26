@@ -34,6 +34,22 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done 2026-08-26d] Credibility fix that unblocks distribution: the estimator
+      used to breach its own printed error band the moment anyone verified it
+      with `--accurate` on a lockfile-heavy repo — `contextcost --accurate .`
+      on this repo reported "21.5% OUTSIDE its ±14% band", the headline honesty
+      claim failing at exactly the moment a sceptical reader checks it. Root
+      cause: 437 real lockfiles scanned, 289 (66%) were mis-billed as generic
+      structured-dense (3.38 chars/token) when they actually cost ~2.2
+      (hash-dense punctuation merges poorly). Added a hashy-lockfile ratio
+      (2.2, measured) and folded three real lockfile excerpts into
+      `docs/calibrate.py`'s corpus so `ERROR_BOUND` is now genuinely measured
+      against lockfiles; the same run now reports "3.0% within its ±23% band".
+      README's ±14% promises (which were untested against lockfiles) were
+      corrected to ±23% and to state the bound covers source/config/lockfiles
+      but not minified output. This is the precondition for the case-study post
+      — every published number must survive verification. 203 tests pass; not
+      released (awaiting next version tag).
 - [done 2026-08-26c] Landing page upgraded to all seventeen measured repos:
       the Pages site still led with only the first batch, hiding buildkit
       89.5% and yq 0.7% — the spread that is the tool's best argument. All

@@ -15,14 +15,25 @@ most of the others, so there is no way to measure against every model an agent
 might use. Byte-pair encoders trained on similar corpora land close to one
 another on ordinary text, but "close" is doing real work in that sentence: the
 bound below is measured against one public tokenizer and is a proxy for the
-rest. That is a weaker claim than "±14%" looks, and it is the reason this
+rest. That is a weaker claim than the printed "±N%" looks, and it is the reason this
 paragraph exists rather than living in a footnote.
 
 The corpus is this repository's own source, tests, tooling and prose, plus
-three synthetic dense samples. Reproducible anywhere the repository is checked
+three synthetic dense samples and three real lockfiles
+(``docs/calibration-samples/``). Reproducible anywhere the repository is checked
 out, which is what lets CI re-run it -- and it also means every commit changes
 the corpus slightly, which is why the published bound carries headroom over the
 measured figure rather than sitting exactly on it.
+
+The real lockfiles matter more than they look. The bound used to be measured
+only against this repo's own Python source plus synthetic dense samples --
+which contain no dependency lockfiles at all. A repository whose cost is
+dominated by ``uv.lock`` / ``Cargo.lock`` / ``package-lock.json`` therefore
+breached the printed band the instant anyone verified it, and the tool's
+headline claim ("the estimate is within ±X%") was, for those repositories,
+untested. The lockfiles in ``calibration-samples/`` are tiny real excerpts
+(3-5 KB, checked in verbatim) so CI measures them without importing a user's
+whole tree, and the bound now actually covers the lockfile case.
 
 Usage:
     python docs/calibrate.py            # measure and rewrite ERROR_BOUND
@@ -110,6 +121,16 @@ def corpus() -> list[tuple[str, str, str]]:
                     docstrings.append(found)
     if docstrings:
         samples.append(("<module prose>", "prose", "\n\n".join(docstrings)))
+
+    # Real lockfiles -- the case the bound previously never measured. These
+    # are tiny genuine excerpts (3-5 KB) checked in under
+    # docs/calibration-samples/ so the run is reproducible and does not pull a
+    # user's whole tree into the corpus.
+    for name in ("uv.lock", "Cargo.lock", "package-lock.json"):
+        path = os.path.join(HERE, "calibration-samples", name)
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8", errors="replace") as handle:
+                samples.append((f"<{name}>", "dense", handle.read()))
 
     samples.extend(_dense_samples())
     samples.extend(_cjk_samples())

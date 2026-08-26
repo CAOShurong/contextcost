@@ -241,3 +241,52 @@ def test_utf8_text_is_not_mistaken_for_binary():
     assert looks_binary(SIMPLIFIED.encode("utf-8")) is False
     assert looks_binary(TRADITIONAL.encode("utf-8")) is False
     assert looks_binary(KOREAN.encode("utf-8")) is False
+
+
+# Real lockfiles: the case the bound used to never measure. A dependency
+# lockfile (uv.lock / Cargo.lock / package-lock.json) is dense but its
+# punctuation is almost entirely `: = + - / . _` separators between hashes and
+# versions, which a byte-pair encoder has little to merge. Charged at the
+# generic structured ratio (3.38) it under-counted by ~35%; the regression
+# this guards against is a repository dominated by a lockfile breaching the
+# printed band the moment anyone verified it.
+import os as _os
+
+_SAMPLES = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "docs", "calibration-samples")
+
+
+def test_real_lockfiles_are_charged_the_hashy_ratio():
+    """uv.lock / Cargo.lock / package-lock.json must not be billed as generic
+    structured dense content (3.38 chars/token); they cost ~2.2 against
+    cl100k_base and the estimator must land close to that."""
+    for name in ("uv.lock", "Cargo.lock", "package-lock.json"):
+        path = _os.path.join(_SAMPLES, name)
+        if not _os.path.isfile(path):
+            continue
+        with open(path, encoding="utf-8", errors="replace") as handle:
+            text = handle.read()
+        estimate = estimate_tokens(text)
+        assert estimate.kind == "dense"
+        chars_per_token = len(text) / estimate.tokens
+        # Hashy lockfiles sit at ~2.0-2.7 chars/token; the generic structured
+        # ratio (3.38) would push this well above 3.0.
+        assert chars_per_token < 3.0, (
+            f"{name} billed at {chars_per_token:.2f} chars/token "
+            f"(generic structured ratio would be ~3.38)"
+        )
+
+
+def test_genuine_manifest_stays_structured_not_hashy():
+    """A real JSON manifest's punctuation is `{}",` and must not be mistaken
+    for a hash-dense lockfile."""
+    manifest = (
+        '{"packages":[{"name":"a","version":"1.0.0","dependencies":{"b":"^2"}},'
+        '{"name":"b","version":"2.3.1","dependencies":{}}]}' * 200
+    )
+    from contextcost.estimate import _dense_ratio
+
+    ratio = _dense_ratio(manifest)
+    from contextcost.estimate import DENSE_STRUCTURED_RATIO, DENSE_HASHY_RATIO
+
+    assert ratio == DENSE_STRUCTURED_RATIO
+    assert ratio != DENSE_HASHY_RATIO

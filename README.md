@@ -26,7 +26,7 @@ checkout at `71a2ff7`, 2026-08-24, contextcost v0.5.0):
 ```console
 $ contextcost plotly.js/
 
-  63,831,059 tokens to read this repository   ±14% estimated, no tokenizer
+  63,831,059 tokens to read this repository   ±23% estimated, no tokenizer
   2717 text files · 1346 binaries not counted · 6 paths ignored
 
 WHERE IT GOES
@@ -118,25 +118,21 @@ approximates by character class and **prints its error bound next to every
 total**.
 
 That bound is measured, not asserted. `docs/calibrate.py` encodes a corpus with
-`cl100k_base` and compares:
-
-| | error vs. a real tokenizer |
-| --- | ---: |
-| median file | 3.1% |
-| 95th percentile | 10.8% |
-| whole corpus (what a repository total looks like) | 6.3% |
-
-The bound the tool actually prints is **±14%**: the measured 95th percentile
-plus 20% headroom. The corpus is this repository's own files, so every commit
-changes it slightly, and a bound sitting exactly on the measurement would turn
-ordinary editing into a red build — where the tempting fix is to widen the
-bound, which is how a number stops meaning anything.
+`cl100k_base` and rewrites `ERROR_BOUND` from the result, so the printed band is
+the one that was actually observed — run it after any estimator change, and CI
+fails if the estimator drifts past it. The current bound is **±23%**,
+measured over this repository's own source plus real lockfiles and synthetic
+dense/CJK samples.
 
 Two caveats that belong here rather than in a footnote. **It is one
 tokenizer** — Anthropic and most others do not publish theirs, so this is a
 proxy, and "byte-pair encoders land close to each other" is doing real work in
-that sentence. And **the corpus is this repository's own files** plus synthetic
-dense and CJK samples; it is real code and real prose, but it is not yours.
+that sentence. And **the bound covers source, configuration and lockfiles, not
+packed or minified output**: a repository whose cost is dominated by
+`dist/*.min.js` or a bundled artifact can sit well outside it, because those
+files tokenize nothing like the corpus. For any number you intend to quote —
+especially on a JavaScript project — run `--accurate` and the real tokenizer
+settles it. The estimate is the triage; the re-measurement is the answer.
 
 ### CJK is counted per script, not as one thing
 
@@ -259,7 +255,7 @@ Nobody would call it bloated.
 ![Where the context budget goes](https://raw.githubusercontent.com/CAOShurong/contextcost/main/docs/breakdown.png)
 
 **37,603 tokens** to read 16 text files
-(estimated, ±14% — see below for why there is no tokenizer).
+(estimated, ±23% — see below for why there is no tokenizer).
 
 | file | tokens | rule | confidence |
 | --- | ---: | --- | --- |
@@ -301,10 +297,12 @@ python -m contextcost --version   # module entry point also works
 
 ## Exact counts: `--accurate`
 
-The default numbers are estimates with a measured ±14 % error bound, and for
-most decisions — "is this repo worth reading", "which files are the problem"
-— that is the right resolution. When a number will be quoted, `--accurate`
-counts with the real tokenizer:
+The default numbers are estimates with a measured ±23% error bound (run
+`python docs/calibrate.py` to see the current figure against a real tokenizer),
+and for most decisions — "is this repo worth reading", "which files are the
+problem" — that resolution is enough. The bound covers source, configuration and
+lockfiles; repositories dominated by packed or minified output sit outside it,
+so when a number will be quoted, `--accurate` counts with the real tokenizer:
 
 ```console
 pip install 'contextcost[accurate]'
@@ -421,7 +419,7 @@ contextcost repo/ --delta v4.0.0      # a tagged release vs its checkout
 ```
 ## contextcost — context delta
 
-**53,834 → 95,631 tokens** (+41,797, estimated ±14%).
+**53,834 → 95,631 tokens** (+41,797, estimated ±23%).
 
 | rule | tokens | share of repo |
 | --- | --- | --- |

@@ -181,7 +181,9 @@ PAGE = """<!doctype html>
 </table>
 <p>The "after" number is not arithmetic on guesses: contextcost proposes cuts,
 then <em>walks the repository again</em> with the proposal applied. Estimates
-carry a measured ±14% error bound; <code>--accurate</code> gives exact
+carry a measured error bound (see <code>ERROR_BOUND</code> in
+<code>estimate.py</code> &mdash; currently &plusmn;23%, measured over real source,
+config and lockfiles); <code>--accurate</code> gives exact
 cl100k_base counts (on plotly.js the estimate landed 0.7% off).</p>
 
 <h2>The spread is the finding</h2>

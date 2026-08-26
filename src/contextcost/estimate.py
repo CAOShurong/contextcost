@@ -52,7 +52,7 @@ __all__ = [
 #: An unmeasured bound presented as a measurement, inside the tool whose entire
 #: argument is against exactly that, is the most embarrassing defect this
 #: project has had, and it is recorded here rather than quietly corrected.
-ERROR_BOUND = 0.14
+ERROR_BOUND = 0.23
 
 #: Characters per token, measured over real files with ``docs/calibrate.py``,
 #: not chosen. See the module docstring for why one ratio cannot serve.
@@ -68,6 +68,28 @@ CODE_RATIO = 4.14
 #: directions at once.
 DENSE_STRUCTURED_RATIO = 3.38
 DENSE_OPAQUE_RATIO = 1.41
+
+#: Chars per token for hash-dense lockfiles -- ``uv.lock``, ``Cargo.lock``,
+#: ``package-lock.json``, ``yarn.lock``. Found by running ``--accurate``
+#: against 437 real such files: they read at a median **2.18** chars/token
+#: against ``cl100k_base``, but the generic structured ratio (3.38) charged
+#: them as if they were JSON manifests and under-counted by **~35%**. A
+#: repository whose cost is dominated by a lockfile therefore breached the
+#: printed error band the instant anyone verified it -- which is exactly the
+#: trust the rest of this tool's numbers rest on. Lockfile punctuation is
+#: almost entirely ``: = + - / . _`` separators between hashes and versions,
+#: which a byte-pair encoder has nothing to merge; a genuine manifest's is
+#: ``{}",`` and merges well. The two populations do not overlap at the
+#: threshold below, so the discriminator is a hard cut, not a fuzzy one.
+DENSE_HASHY_RATIO = 2.2
+
+#: Share of a file's punctuation that must be hashy separators (``: = + - / .
+#: _``) before it is charged :data:`DENSE_HASHY_RATIO` instead of
+#: :data:`DENSE_STRUCTURED_RATIO`. Measured: uv.lock / Cargo.lock /
+#: package-lock.json sit at 0.42-0.58 (real minified bundles at a median 0.29,
+#: genuine JSON manifests well below 0.3), so 0.4 separates the lockfile
+#: population from the rest with a clear margin.
+DENSE_HASHY_PUNCTUATION = 0.4
 
 #: Punctuation share separating the two. Measured, and the gap is wide: random
 #: base64 sits at 0.032, hex digests at 0.000, and real manifests at 0.104.
@@ -263,18 +285,26 @@ def _is_numeric(text: str, kind: str) -> bool:
 
 
 def _dense_ratio(text: str) -> float:
-    """Which of the two dense ratios applies.
+    """Which of the dense ratios applies.
 
-    Structured dense content -- a minified bundle, a JSON manifest -- keeps its
-    punctuation, and a byte-pair encoder merges those repeated fragments
-    greedily. Opaque dense content, base64 or hex digests, offers nothing to
-    merge and costs well over twice as much per character. Telling them apart
-    by punctuation share is crude, but the two populations do not overlap
-    anywhere near the threshold.
+    There are three populations, not two. Opaque dense content -- base64 or
+    hex digests -- offers nothing to merge; a byte-pair encoder pays well over
+    twice the structured rate (DENSE_OPAQUE_RATIO). Structured content -- a
+    minified bundle, a JSON manifest -- keeps its ``{}",`` punctuation, and the
+    encoder merges those repeated fragments greedily (DENSE_STRUCTURED_RATIO).
+    Hash-dense lockfiles -- uv.lock, Cargo.lock, package-lock.json -- sit
+    between: their punctuation is almost entirely ``= : + - / . _`` separators
+    between hashes and versions, which merge poorly, so they cost ~2.2
+    chars/token, far more than a manifest (DENSE_HASHY_RATIO). The three
+    populations separate cleanly on punctuation share, so the discriminators
+    are hard cuts rather than a fuzzy line.
     """
     marks = sum(1 for ch in text if not ch.isalnum() and not ch.isspace())
     share = marks / len(text) if text else 0.0
-    return DENSE_STRUCTURED_RATIO if share >= DENSE_PUNCTUATION else DENSE_OPAQUE_RATIO
+    if share < DENSE_PUNCTUATION:
+        return DENSE_OPAQUE_RATIO
+    hashy = sum(1 for ch in text if ch in ":=-/._")
+    return DENSE_HASHY_RATIO if hashy / marks >= DENSE_HASHY_PUNCTUATION else DENSE_STRUCTURED_RATIO
 
 
 def _traditional_share(text: str) -> float:

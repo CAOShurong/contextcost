@@ -38,7 +38,9 @@ def test_headline_carries_the_error_bound(tmp_path):
     text = render_markdown(walk, reduce_repository(root))
 
     assert "tokens" in text
-    assert "\u00b114%" in text, "an estimate without its bound gets quoted without one"
+    from contextcost.estimate import ERROR_BOUND
+
+    assert f"\u00b1{ERROR_BOUND:.0%}" in text, "an estimate without its bound gets quoted without one"
 
 
 def test_tables_render_as_pipe_tables(tmp_path):

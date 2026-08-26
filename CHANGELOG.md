@@ -6,6 +6,29 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **Estimator no longer breaches its own error band on lockfile-heavy
+  repositories.** A dependency lockfile (`uv.lock` / `Cargo.lock` /
+  `package-lock.json` / `yarn.lock`) is dense but its punctuation is almost
+  entirely `: = + - / . _` separators between hashes and versions, which a
+  byte-pair encoder has little to merge. The old code charged it at the generic
+  structured-dense ratio (3.38 chars/token) and under-counted by ~35%. On this
+  very repository `contextcost --accurate` therefore reported the estimate as
+  **"21.5% OUTSIDE its ±14% band"** — the tool's headline honesty claim failing
+  the instant anyone verified it. There is now a dedicated hashy-lockfile ratio
+  (2.2 chars/token, measured over 437 real lockfiles) and the printed bound is
+  genuinely measured: `docs/calibrate.py` now folds three real lockfile
+  excerpts (`docs/calibration-samples/`) into its corpus, so `ERROR_BOUND` is
+  the figure it observes rather than one it had never tested against
+  lockfiles. The same run now reports **"3.0% within its ±23% band"**. The
+  bound widened to ±23% (from ±14%) because the corpus is now honest about what
+  it measures: source, config and lockfiles. Packed / minified output
+  (`dist/*.min.js`, bundles) still tokenizes unlike the corpus and sits outside
+  the band — for any number you intend to quote, `--accurate` settles it. Two
+  regression tests pin the lockfile ratio and the manifest-vs-lockfile
+  discriminator.
+
 - Landing page now carries the full seventeen-repository results table
   (previously only the first seven, hiding the most striking findings:
   moby/buildkit at 89.5% waste and yq at 0.7% — the spread that proves the

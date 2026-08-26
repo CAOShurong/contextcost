@@ -34,6 +34,18 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done 2026-08-26h] VulnFuse README gains a worked example: the synthetic
+      three-scanner demo is now walked end to end as a user story — five
+      findings become four explainable clusters; Log4Shell merges across
+      Grype/Trivy with the quoted evidence scores (+40 shared CVE, +25
+      component, +15 asset, +10 location); the Snyk same-CVE record stays a
+      separate cluster because its asset differs (source repo vs built image);
+      single-tool OpenSSL/zlib stay untouched; and the coverage tables turn
+      scanner disagreement into numbers (Trivy×Grype 33% Jaccard, Snyk 0%).
+      Every figure was taken from a fresh CLI run of the docs/demo fixtures,
+      not written from memory; `prettier --check` +
+      `scripts/check-repository.mjs` green before push. Shipped as
+      CAOShurong/vulnfuse 38a95b7. No product code touched.
 - [done 2026-08-26g] benchlineage README gains a zero-install trial section:
       contextcost's own conversion lesson (`uvx` one-liner first) applied to
       the portfolio's highest-real-usage project. Shipped as CAOShurong/

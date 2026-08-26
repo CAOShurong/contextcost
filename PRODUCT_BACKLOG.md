@@ -34,6 +34,13 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done 2026-08-26c] Landing page upgraded to all seventeen measured repos:
+      the Pages site still led with only the first batch, hiding buildkit
+      89.5% and yq 0.7% — the spread that is the tool's best argument. All
+      rows re-measured live with v0.5.1 before publishing (gitleaks/ruff
+      upstream drift quoted fresh); hero switched to buildkit; --check
+      staleness gate intact; 201 tests green; shipped d06111f.
+
 - [done 2026-08-26b] Community surface + launch readiness: GitHub Discussions
       enabled (repo had no discussion venue for the traffic a launch post
       would send); `Questions & feedback` issue-template routes "number

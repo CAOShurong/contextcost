@@ -65,7 +65,15 @@ def acquire():
 
 def release():
     cur = _read()
-    if cur and cur.get("holder_pid") == os.getpid():
+    # A PID check alone can never succeed here: every agent command runs as a
+    # fresh process, so the releasing process is never the acquiring one.
+    # This lock gates a single sequential track on one machine, so a same-host
+    # release is the honest ownership test. Drop the host clause if this lock
+    # ever gates concurrent agents sharing a machine.
+    same_host = cur and cur.get("host", "unknown") == os.environ.get(
+        "COMPUTERNAME", "unknown"
+    )
+    if cur and (cur.get("holder_pid") == os.getpid() or same_host):
         try:
             os.remove(LOCK_PATH)
         except OSError:

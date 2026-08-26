@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - 2026-08-26
+
+### Fixed
+
+- **The PyPI project page now shows the same README as the repository.** Every
+  release since v0.5.1 has carried the rewritten README, but the tags were
+  cut *before* the hero table of seventeen measured repositories, the
+  self-measurement repair (`/uv.lock` ignored — this repo's own proposal fell
+  from 51% to 7.2%), and the recalibrated ±23% error bound landed on main.
+  A cold visitor landing on PyPI read a page whose headline table was missing
+  and whose printed bound contradicted what the tool itself reports. No code
+  changed in this release; it exists so the distribution surface matches the
+  evidence.
+
 ## [Unreleased]
 
 ### Fixed

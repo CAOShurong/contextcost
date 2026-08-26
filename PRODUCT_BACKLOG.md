@@ -34,6 +34,16 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done 2026-08-26g] benchlineage README gains a zero-install trial section:
+      contextcost's own conversion lesson (`uvx` one-liner first) applied to
+      the portfolio's highest-real-usage project. Shipped as CAOShurong/
+      benchlineage 81ee19a: "Try it without installing" section placed right
+      after the evidence-chain figure — `uvx benchlineage demo my-bench
+      --seed 20260804` + `verify` with expected `"valid": true` stated, plus
+      a pointer from the Install section. Both commands live-verified on
+      PyPI 0.3.8 before publishing (demo generated, verify returned valid,
+      report written); repo check script green (83 files). No product code
+      touched.
 - [done 2026-08-26f] Integrity repair: this repository now actually follows its
       own recommendation. The seven-repos case study claimed contextcost's own
       `uv.lock` finding had been fixed with "one line in `.gitignore`" —

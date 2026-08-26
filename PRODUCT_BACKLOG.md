@@ -34,6 +34,21 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done 2026-08-26i] Profile freshness pass: the "Latest changes" section in
+      CAOShurong/CAOShurong had gone stale against its own rule (newest
+      release *or* substantive commit per repo). Audited the local git log of
+      all 24 checkouts and refreshed 4 rows, shipped as profile commit
+      5e5377a: VulnFuse now names the synthetic three-scanner demo (90c9d42)
+      and the README worked example (38a95b7) instead of "routine dependency
+      upkeep"; BenchLineage's row gained the zero-install `uvx` trial
+      (81ee19a); DidYouLearn and OhmJudge correctly say "only dependency
+      upkeep since" with links. Integrity catch: didyoulearn@e932cc0 and
+      ohmjudge@d1e4f84 exist only locally — Dependabot landed them on GitHub
+      as merge commits f98a100/#9 and fbd7ff4/#5, so direct-SHA links would
+      have been dead; rows link PRs instead and both local clones were reset
+      to origin/main. Lesson: before linking a commit SHA from another
+      checkout, verify it exists on origin (`git rev-list HEAD..origin/main`),
+      or link the PR.
 - [done 2026-08-26h] VulnFuse README gains a worked example: the synthetic
       three-scanner demo is now walked end to end as a user story — five
       findings become four explainable clusters; Log4Shell merges across

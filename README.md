@@ -18,6 +18,42 @@ that is waste?**
 uvx contextcost .          # no install, no config, results in seconds
 ```
 
+## 17 real repositories, measured
+
+One command per repository (`uvx contextcost <repo>`), full public checkouts,
+estimate tier (±14% measured bound). "Measured saving" is what disappears when
+the proposed exclusions are applied — **re-measured by walking the tree a
+second time**, never added up from guesses:
+
+| repository | tokens to read it | measured saving | share |
+| --- | ---: | ---: | ---: |
+| [moby/buildkit](https://github.com/moby/buildkit) | 14,600,569 | 13,070,932 | **89.5%** |
+| [jesseduffield/lazygit](https://github.com/jesseduffield/lazygit) | 5,766,190 | 4,487,197 | **77.8%** |
+| [sharkdp/bat](https://github.com/sharkdp/bat) | 53,715,389 | 29,977,946 | **55.8%** |
+| [astral-sh/uv](https://github.com/astral-sh/uv) | 8,855,618 | 4,523,776 | 51.1% |
+| [astral-sh/ruff](https://github.com/astral-sh/ruff) | 20,666,629 | 10,384,853 | 50.2% |
+| [contextcost (this repo)](https://github.com/CAOShurong/contextcost) | 161,453 | 75,790 | 46.9% |
+| [dask/dask](https://github.com/dask/dask) | 4,315,000 | 2,006,637 | 46.5% |
+| [plotly/plotly.js](https://github.com/plotly/plotly.js) | 63,831,059 | 26,822,142 | 42.0% |
+| [gitleaks/gitleaks](https://github.com/gitleaks/gitleaks) | 301,132 | 101,742 | 33.8% |
+| [trufflesecurity/trufflehog](https://github.com/trufflesecurity/trufflehog) | 4,456,181 | 1,444,421 | 32.4% |
+| [rclone/rclone](https://github.com/rclone/rclone) | 7,889,210 | 1,719,408 | 21.8% |
+| [pandas-dev/pandas](https://github.com/pandas-dev/pandas) | 10,105,577 | 2,176,295 | 21.5% |
+| [keycloak/keycloak](https://github.com/keycloak/keycloak) | 18,687,556 | 1,397,219 | 7.5% |
+| [pydata/xarray](https://github.com/pydata/xarray) | 2,133,276 | 126,159 | 5.9% |
+| [restic/restic](https://github.com/restic/restic) | 1,054,989 | 49,807 | 4.7% |
+| [astropy/astropy](https://github.com/astropy/astropy) | 7,881,727 | 212,121 | 2.7% |
+| [mikefarah/yq](https://github.com/mikefarah/yq) | 420,446 | 2,989 | **0.7%** |
+
+The spread *is* the finding: there is no universal waste percentage, only your
+repository's number — and a disciplined repository like yq correctly comes
+back clean instead of being handed invented findings. Per-file breakdowns:
+the [first seven repositories](docs/case-studies/2026-08-25-seven-repos.md),
+[ten more](docs/case-studies/2026-08-26-ten-more-repos.md), and the
+head-to-head against a packing tool
+[here](docs/case-studies/2026-08-26-vs-packing.md). Re-run the whole table
+yourself: `bash docs/case-studies/reproduce.sh`.
+
 ## The 3-second version
 
 Real output on [plotly.js](https://github.com/plotly/plotly.js) (full public
@@ -254,12 +290,12 @@ Nobody would call it bloated.
 
 ![Where the context budget goes](https://raw.githubusercontent.com/CAOShurong/contextcost/main/docs/breakdown.png)
 
-**37,603 tokens** to read 16 text files
+**41,231 tokens** to read 16 text files
 (estimated, ±23% — see below for why there is no tokenizer).
 
 | file | tokens | rule | confidence |
 | --- | ---: | --- | --- |
-| `package-lock.json` | 6,764 | lockfile | certain |
+| `package-lock.json` | 10,392 | lockfile | certain |
 | `dist/bundle.min.js` | 3,582 | minified | certain |
 | `vendor/legacy/widget.js` | 1,043 | vendored | likely |
 | `src/generated/schema.js` | 924 | generated | certain |
@@ -267,7 +303,7 @@ Nobody would call it bloated.
 
 ![What the proposal actually saves](https://raw.githubusercontent.com/CAOShurong/contextcost/main/docs/saving.png)
 
-Excluding those leaves **23,788 tokens — a 37%
+Excluding those leaves **23,788 tokens — a 42%
 reduction**, and that number is the difference between two walks of the
 repository, not a sum of what was dropped.
 
@@ -467,7 +503,7 @@ tool call beside the model.
 ## Development
 
 ```bash
-python -m pytest -q                      # 196 tests, no configuration needed
+python -m pytest -q                      # 198 tests, no configuration needed
 python -m ruff check src tests docs
 python docs/build_docs.py                # regenerate the figures and README
 python docs/build_docs.py --check        # CI fails if they are stale

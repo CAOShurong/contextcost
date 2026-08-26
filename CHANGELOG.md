@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+- Landing page now carries the full seventeen-repository results table
+  (previously only the first seven, hiding the most striking findings:
+  moby/buildkit at 89.5% waste and yq at 0.7% — the spread that proves the
+  classifier reads files rather than assuming big-repo-equals-wasteful).
+  All 17 rows re-measured live with v0.5.1 `--json` on the cited checkouts;
+  figures match both case studies exactly except gitleaks (−152 tokens of
+  upstream drift, share unchanged) and ruff (50.2% → 49.8%, upstream drift),
+  and the page quotes the fresh run. The hero example switched from plotly.js
+  (42%) to buildkit (89.5%) — a bigger number that is also a better story.
+  `docs/build_site.py --check` still gates staleness in CI.
 - Release notes that sell: the v0.5.0 and v0.5.1 GitHub Releases previously
   consisted of a single auto-generated changelog link — the page every
   release visitor, packager, and news aggregator lands on showed nothing

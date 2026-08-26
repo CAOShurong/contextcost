@@ -40,27 +40,37 @@
 
 <div class="try"><b>$ uvx contextcost .</b><br><span class="dim"># no install, no config, results in seconds</span></div>
 
-<h2>Measured on 7 well-known open-source repositories</h2>
+<h2>Measured on 17 well-known open-source repositories</h2>
 <table>
 <tr><th>Repository</th><th>Tokens to read</th><th>After proposal</th><th>Saved</th><th>Share</th></tr>
+<tr><td><a href="https://github.com/moby/buildkit">moby/buildkit</a></td><td>14,600,569</td><td>1,529,637</td><td class="save">13,070,932</td><td class="save">89.5%</td></tr>
+<tr><td><a href="https://github.com/jesseduffield/lazygit">jesseduffield/lazygit</a></td><td>5,766,190</td><td>1,278,993</td><td class="save">4,487,197</td><td class="save">77.8%</td></tr>
+<tr><td><a href="https://github.com/sharkdp/bat">sharkdp/bat</a></td><td>53,715,389</td><td>23,737,443</td><td class="save">29,977,946</td><td class="save">55.8%</td></tr>
+<tr><td><a href="https://github.com/astral-sh/uv">astral-sh/uv</a></td><td>8,855,618</td><td>4,331,842</td><td class="save">4,523,776</td><td class="save">51.1%</td></tr>
+<tr><td><a href="https://github.com/astral-sh/ruff">astral-sh/ruff</a></td><td>20,978,634</td><td>10,531,462</td><td class="save">10,447,172</td><td class="save">49.8%</td></tr>
 <tr><td><a href="https://github.com/plotly/plotly.js">plotly.js</a></td><td>63,831,059</td><td>37,008,917</td><td class="save">26,822,142</td><td class="save">42.0%</td></tr>
 <tr><td><a href="https://github.com/dask/dask">dask</a></td><td>4,315,000</td><td>2,308,363</td><td class="save">2,006,637</td><td class="save">46.5%</td></tr>
 <tr><td><a href="https://github.com/pandas-dev/pandas">pandas</a></td><td>10,105,577</td><td>7,929,282</td><td class="save">2,176,295</td><td class="save">21.5%</td></tr>
+<tr><td><a href="https://github.com/rclone/rclone">rclone</a></td><td>7,889,081</td><td>6,169,673</td><td class="save">1,719,408</td><td class="save">21.8%</td></tr>
+<tr><td><a href="https://github.com/trufflesecurity/trufflehog">trufflesecurity/trufflehog</a></td><td>4,456,181</td><td>3,011,760</td><td class="save">1,444,421</td><td class="save">32.4%</td></tr>
+<tr><td><a href="https://github.com/gitleaks/gitleaks">gitleaks</a></td><td>300,980</td><td>199,238</td><td class="save">101,742</td><td class="save">33.8%</td></tr>
 <tr><td><a href="https://github.com/keycloak/keycloak">keycloak</a></td><td>18,687,556</td><td>17,290,337</td><td class="save">1,397,219</td><td class="save">7.5%</td></tr>
-<tr><td><a href="https://github.com/rclone/rclone">rclone</a></td><td>7,889,210</td><td>6,169,802</td><td class="save">1,719,408</td><td class="save">21.8%</td></tr>
+<tr><td><a href="https://github.com/pydata/xarray">pydata/xarray</a></td><td>2,133,276</td><td>2,007,117</td><td class="save">126,159</td><td class="save">5.9%</td></tr>
+<tr><td><a href="https://github.com/restic/restic">restic</a></td><td>1,054,989</td><td>1,005,182</td><td class="save">49,807</td><td class="save">4.7%</td></tr>
 <tr><td><a href="https://github.com/astropy/astropy">astropy</a></td><td>7,881,727</td><td>7,669,606</td><td class="save">212,121</td><td class="save">2.7%</td></tr>
-<tr><td><a href="https://github.com/CAOShurong/contextcost">contextcost itself</a></td><td>161,453</td><td>85,663</td><td class="save">75,790</td><td class="save">46.9%</td></tr>
+<tr><td><a href="https://github.com/mikefarah/yq">mikefarah/yq</a></td><td>420,446</td><td>417,457</td><td class="save">2,989</td><td class="save">0.7%</td></tr>
+<tr><td><a href="https://github.com/CAOShurong/contextcost">contextcost itself</a></td><td>175,189</td><td>91,872</td><td class="save">83,317</td><td class="save">47.6%</td></tr>
 </table>
 <p>The "after" number is not arithmetic on guesses: contextcost proposes cuts,
 then <em>walks the repository again</em> with the proposal applied. Estimates
 carry a measured ±14% error bound; <code>--accurate</code> gives exact
 cl100k_base counts (on plotly.js the estimate landed 0.7% off).</p>
 
-<h2>What the waste actually is</h2>
+<h2>The spread is the finding</h2>
 <ul>
-<li><strong>plotly.js &mdash; 42%, 26.8M tokens:</strong> compiled bundles under <code>dist/</code> plus recorded numeric test fixtures (single JSON files up to 4.58M tokens).</li>
+<li><strong>moby/buildkit &mdash; 89.5%, 13.1M of 14.6M tokens:</strong> a vendored <code>vendor/</code> tree plus generated protocol code. An agent fixing a Dockerfile frontend issue could lose 89% of its reading budget and miss nothing.</li>
 <li><strong>dask &mdash; 46.5%:</strong> one lockfile (<code>pixi.lock</code>, 932K tokens) is 22% of the entire repository's context cost.</li>
-<li><strong>astropy &mdash; 2.7%:</strong> a disciplined repository correctly gets told it is clean. The tool does not invent waste.</li>
+<li><strong>mikefarah/yq &mdash; 0.7%:</strong> a disciplined repository correctly gets told it is clean. The tool does not invent waste.</li>
 </ul>
 
 <h2>Make it permanent</h2>
@@ -71,7 +81,7 @@ cl100k_base counts (on plotly.js the estimate landed 0.7% off).</p>
 Full methodology and reproduction commands:
 <a href="https://github.com/CAOShurong/contextcost/blob/main/docs/case-studies/2026-08-25-seven-repos.md">the seven-repo case study</a> and
 <a href="https://github.com/CAOShurong/contextcost/blob/main/docs/case-studies/2026-08-26-ten-more-repos.md">ten more repos (89.5% on buildkit down to 0.7% on yq)</a>.
-Also new: <a href="https://github.com/CAOShurong/contextcost/blob/main/docs/case-studies/2026-08-26-vs-packing.md">repomix vs contextcost on the same repo</a>.
+Also: <a href="https://github.com/CAOShurong/contextcost/blob/main/docs/case-studies/2026-08-26-vs-packing.md">repomix vs contextcost on the same repo</a>.
 Source: <a href="https://github.com/CAOShurong/contextcost">github.com/CAOShurong/contextcost</a>
 &middot; <a href="https://pypi.org/project/contextcost/">PyPI</a>.
 </footer>

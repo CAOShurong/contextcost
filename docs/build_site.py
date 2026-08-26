@@ -20,11 +20,42 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-#: The seven-repo table, transcribed from the reproduce.sh run of 2026-08-25
-#: (matched every published saved-token figure exactly; totals drift <0.1%
-#: as upstream repos evolve). Kept in one place so --check has a single
-#: source to compare against.
+#: All seventeen repositories measured across both case studies, re-run live
+#: with `contextcost --json` on 2026-08-26 (v0.5.1, same machine, same hour).
+#: Every figure below matched the published case studies exactly except
+#: gitleaks (upstream drift −152 tokens, share unchanged) and ruff (upstream
+#: drift, 50.2% → 49.8%) — the page quotes the fresh run. Kept in one place
+#: so --check has a single source to compare against.
 REPOS = [
+    (
+        "moby/buildkit",
+        "https://github.com/moby/buildkit",
+        14_600_569,
+        1_529_637,
+        13_070_932,
+    ),
+    (
+        "jesseduffield/lazygit",
+        "https://github.com/jesseduffield/lazygit",
+        5_766_190,
+        1_278_993,
+        4_487_197,
+    ),
+    (
+        "sharkdp/bat",
+        "https://github.com/sharkdp/bat",
+        53_715_389,
+        23_737_443,
+        29_977_946,
+    ),
+    ("astral-sh/uv", "https://github.com/astral-sh/uv", 8_855_618, 4_331_842, 4_523_776),
+    (
+        "astral-sh/ruff",
+        "https://github.com/astral-sh/ruff",
+        20_978_634,
+        10_531_462,
+        10_447_172,
+    ),
     (
         "plotly.js",
         "https://github.com/plotly/plotly.js",
@@ -41,20 +72,63 @@ REPOS = [
         2_176_295,
     ),
     (
+        "rclone",
+        "https://github.com/rclone/rclone",
+        7_889_081,
+        6_169_673,
+        1_719_408,
+    ),
+    (
+        "trufflesecurity/trufflehog",
+        "https://github.com/trufflesecurity/trufflehog",
+        4_456_181,
+        3_011_760,
+        1_444_421,
+    ),
+    (
+        "gitleaks",
+        "https://github.com/gitleaks/gitleaks",
+        300_980,
+        199_238,
+        101_742,
+    ),
+    (
         "keycloak",
         "https://github.com/keycloak/keycloak",
         18_687_556,
         17_290_337,
         1_397_219,
     ),
-    ("rclone", "https://github.com/rclone/rclone", 7_889_210, 6_169_802, 1_719_408),
+    (
+        "pydata/xarray",
+        "https://github.com/pydata/xarray",
+        2_133_276,
+        2_007_117,
+        126_159,
+    ),
+    (
+        "restic",
+        "https://github.com/restic/restic",
+        1_054_989,
+        1_005_182,
+        49_807,
+    ),
     ("astropy", "https://github.com/astropy/astropy", 7_881_727, 7_669_606, 212_121),
+    (
+        "mikefarah/yq",
+        "https://github.com/mikefarah/yq",
+        420_446,
+        417_457,
+        2_989,
+    ),
+    # contextcost itself, measured last so the tool's own tree is stable
+    # under this edit (2026-08-26 live run: 65 files, 47.6%).
     (
         "contextcost itself",
         "https://github.com/CAOShurong/contextcost",
-        161_453,
-        85_663,
-        75_790,
+        175_189,
+        91_872,
+        83_317,
     ),
 ]
 
@@ -100,7 +174,7 @@ PAGE = """<!doctype html>
 
 <div class="try"><b>$ uvx contextcost .</b><br><span class="dim"># no install, no config, results in seconds</span></div>
 
-<h2>Measured on 7 well-known open-source repositories</h2>
+<h2>Measured on 17 well-known open-source repositories</h2>
 <table>
 <tr><th>Repository</th><th>Tokens to read</th><th>After proposal</th><th>Saved</th><th>Share</th></tr>
 {rows}
@@ -110,11 +184,11 @@ then <em>walks the repository again</em> with the proposal applied. Estimates
 carry a measured ±14% error bound; <code>--accurate</code> gives exact
 cl100k_base counts (on plotly.js the estimate landed 0.7% off).</p>
 
-<h2>What the waste actually is</h2>
+<h2>The spread is the finding</h2>
 <ul>
-<li><strong>plotly.js &mdash; 42%, 26.8M tokens:</strong> compiled bundles under <code>dist/</code> plus recorded numeric test fixtures (single JSON files up to 4.58M tokens).</li>
+<li><strong>moby/buildkit &mdash; 89.5%, 13.1M of 14.6M tokens:</strong> a vendored <code>vendor/</code> tree plus generated protocol code. An agent fixing a Dockerfile frontend issue could lose 89% of its reading budget and miss nothing.</li>
 <li><strong>dask &mdash; 46.5%:</strong> one lockfile (<code>pixi.lock</code>, 932K tokens) is 22% of the entire repository's context cost.</li>
-<li><strong>astropy &mdash; 2.7%:</strong> a disciplined repository correctly gets told it is clean. The tool does not invent waste.</li>
+<li><strong>mikefarah/yq &mdash; 0.7%:</strong> a disciplined repository correctly gets told it is clean. The tool does not invent waste.</li>
 </ul>
 
 <h2>Make it permanent</h2>
@@ -125,7 +199,7 @@ cl100k_base counts (on plotly.js the estimate landed 0.7% off).</p>
 Full methodology and reproduction commands:
 <a href="https://github.com/CAOShurong/contextcost/blob/main/docs/case-studies/2026-08-25-seven-repos.md">the seven-repo case study</a> and
 <a href="https://github.com/CAOShurong/contextcost/blob/main/docs/case-studies/2026-08-26-ten-more-repos.md">ten more repos (89.5% on buildkit down to 0.7% on yq)</a>.
-Also new: <a href="https://github.com/CAOShurong/contextcost/blob/main/docs/case-studies/2026-08-26-vs-packing.md">repomix vs contextcost on the same repo</a>.
+Also: <a href="https://github.com/CAOShurong/contextcost/blob/main/docs/case-studies/2026-08-26-vs-packing.md">repomix vs contextcost on the same repo</a>.
 Source: <a href="https://github.com/CAOShurong/contextcost">github.com/CAOShurong/contextcost</a>
 &middot; <a href="https://pypi.org/project/contextcost/">PyPI</a>.
 </footer>

@@ -141,8 +141,17 @@ repositories quietly spend a large fraction of it on files that often add
 little to an ordinary source-code task: lockfiles, minified bundles, vendored
 dependencies, snapshot fixtures, generated clients.
 
-The first repository this was ever pointed at had **55% of its entire context
-cost in a single generated CSV**.
+The numbers are not hypothetical. Measured on full public checkouts with one
+command each (`uvx contextcost <repo>`):
+
+- **[plotly.js](https://github.com/plotly/plotly.js) — 42% waste (26.8M tokens).** 17.4M tokens of `dist/` build output plus 5.9M of minified bundles — an agent fixing a chart bug never reads any of it usefully.
+- **[dask](https://github.com/dask/dask) — 46.5% waste (2.0M tokens).** A single `pixi.lock` is 22% of the entire repo's context cost; 383K more in logo SVGs that are pure coordinate dumps.
+- **[astropy](https://github.com/astropy/astropy) — 2.7%.** A disciplined repo correctly comes back almost clean instead of being handed invented findings.
+
+The spread *is* the finding: there is no universal waste percentage, only your
+repository's number. The full table of [seven real repos](docs/case-studies/2026-08-25-seven-repos.md)
+and [ten more](docs/case-studies/2026-08-26-ten-more-repos.md) is reproducible
+from a single script.
 
 There are good tools for *packing* a repository into a prompt — repomix,
 gitingest, code2prompt, files-to-prompt. This is not one of them. Packing is a

@@ -20,6 +20,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Documentation
+
+- **README "Why this exists" now leads with the real, named findings** instead
+  of an anonymous anecdote. The section opens on measured numbers from full
+  public checkouts — plotly.js 42% (26.8M tokens), dask 46.5% (2.0M, a single
+  lockfile at 22% of the repo), astropy 2.7% (a clean repo correctly told it is
+  clean) — and links the seven- and ten-repo case studies. Every figure is
+  reproducible with `uvx contextcost <repo>`. (No code changed; docs only.)
+
 ### Fixed
 
 - **This repository now follows its own recommendation — for real, not just in

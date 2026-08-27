@@ -12,11 +12,13 @@
 </p>
 
 **What does it cost an AI agent to read your repository — and how much of
-that is waste?**
+that is waste it can prove?**
 
 ```bash
-uvx contextcost .          # no install, no config, results in seconds
+uvx contextcost .          # your repo, no install, results in seconds
 ```
+
+**3 seconds, on a repo you already know — [plotly.js](https://github.com/plotly/plotly.js):** `uvx contextcost plotly.js` reports **63.8M tokens to read it, and 26.8M of them (42%) are build output, minified bundles and recorded test fixtures an agent never reads usefully.** The 42% isn't a guess — the tool re-walks the repository with its proposal applied and reports the *difference* between the two measurements. ([All 17 measured repos →](docs/case-studies/2026-08-25-seven-repos.md))
 
 ## 17 real repositories, measured
 

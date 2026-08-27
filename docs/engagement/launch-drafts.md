@@ -86,7 +86,7 @@ test fixtures. Nothing opinionated — every cut is provable.
 
 4/ Savings here are MEASURED: propose cuts → re-walk with proposal applied →
 report the difference. Not subtraction. Estimator landed 0.7% off the real
-tokenizer on plotly.js (band: ±14%).
+tokenizer on plotly.js (band: ±23%, recalibrated after lockfile/numeric-data drift showed the old ±14% was unmeasured).
 
 5/ One command, no install: `uvx contextcost .`
 GitHub Action for PR deltas, MCP server for coding agents, MIT, zero deps.

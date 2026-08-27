@@ -15,10 +15,17 @@
 that is waste it can prove?**
 
 ```bash
-uvx contextcost .          # your repo, no install, results in seconds
+uvx contextcost <repo>     # any repo URL or local path — nothing installed
 ```
 
-**3 seconds, on a repo you already know — [plotly.js](https://github.com/plotly/plotly.js):** `uvx contextcost plotly.js` reports **63.8M tokens to read it, and 26.8M of them (42%) are build output, minified bundles and recorded test fixtures an agent never reads usefully.** The 42% isn't a guess — the tool re-walks the repository with its proposal applied and reports the *difference* between the two measurements. ([All 17 measured repos →](docs/case-studies/2026-08-25-seven-repos.md))
+**In 3 seconds, on repos you already know:**
+
+| you point it at | it costs to read | waste it can prove (measured) |
+| --- | ---: | ---: |
+| `plotly/plotly.js` | 63.8M tokens | **26.8M — 42%** |
+| `dask/dask` | 4.3M tokens | **2.0M — 46.5%** |
+
+`uvx contextcost plotly.js` reports that **26.8M of its 63.8M tokens (42%) are build output, minified bundles and recorded test fixtures an agent never reads usefully.** The 42% isn't a guess — the tool re-walks the repository with its proposal applied and reports the *difference* between the two measurements. ([All 17 measured repos →](docs/case-studies/2026-08-25-seven-repos.md))
 
 ## 17 real repositories, measured
 

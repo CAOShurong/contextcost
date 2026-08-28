@@ -367,6 +367,10 @@ Measured on this repository itself, estimate and exact agree within 1 %. On
 repositories full of numeric data dumps they can diverge far more — which is
 exactly the kind of thing running `--accurate` once will tell you.
 
+See the [exact-counts case study](docs/case-studies/2026-08-26-exact-counts.md)
+for a head-to-head comparison of estimated vs. tokenizer-accurate counts on 17
+repositories, and why the estimate bound was recalibrated from ±14% to ±23%.
+
 ## Consumer-native ignore files
 
 The same repository has a different eligible file set in different tools.

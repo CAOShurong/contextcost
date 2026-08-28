@@ -18,41 +18,47 @@ All notable changes to this project are documented here. The format follows
   changed in this release; it exists so the distribution surface matches the
   evidence.
 
-## [Unreleased]
+## [0.5.4] - 2026-08-29
 
 ### Documentation
 
-- **README "Why this exists" now leads with the real, named findings** instead
-  of an anonymous anecdote. The section opens on measured numbers from full
-  public checkouts — plotly.js 42% (26.8M tokens), dask 46.5% (2.0M, a single
-  lockfile at 22% of the repo), astropy 2.7% (a clean repo correctly told it is
-  clean) — and links the seven- and ten-repo case studies. Every figure is
-  reproducible with `uvx contextcost <repo>`. (No code changed; docs only.)
+- **README hero first-screen rewritten** with the three-second input→cost→saved
+  table: two copy-paste `uvx contextcost` one-liners and a hero table showing
+  plotly.js 42% (26.8M tokens) and dask 46.5% (2.0M tokens) measured waste.
+  The old mechanism-first text is gone; the `uvx` one-liner is now the first
+  actionable thing a visitor sees.
+
+- **README "Why this exists" condensed** to one paragraph with live named
+  findings — plotly.js 42% (26.8M tokens), dask 46.5% (a single lockfile at
+  22% of the repo), astropy 2.7% (a clean repo correctly told it is clean) —
+  linking the seven- and ten-repo case studies. Every figure is reproducible
+  with `uvx contextcost <repo>`.
+
+- **Launch drafts updated** to cite the recalibrated ±23% error band instead of
+  the unmeasured ±14% claim.
+
+- **`--accurate` section links the exact-counts case study** for a head-to-head
+  comparison of estimated vs. tokenizer-accurate counts on 17 repositories.
+
+- **README hero table and landing page self-measurement refreshed** to current
+  reality (113,369 tokens → 104,803 after proposal, 7.6% saving), with the
+  case-study postscript kept honest about the earlier false claim.
 
 ### Fixed
 
-- **The GitHub Action's budget gate now actually works.** The action's
-  "Fail on a large addition" step read `env.CONTEXTCOST_MAX_ADDED`, but that
-  variable was never set from any input — so the `if:` guard was always false
-  and the gate silently never ran, even when a consumer set a budget. The
+- **GitHub Action budget gate now actually works.** The "Fail on a large
+  addition" step read `env.CONTEXTCOST_MAX_ADDED`, but no input ever set it —
+  so the `if:` guard was always false and the gate silently never ran. The
   action now declares a `max-added` input and wires it through, so
   `with: { max-added: 1000000 }` fails the check when a PR adds more than a
   million readable tokens. Documented in the README's "In a pull request"
   section. (No CLI code changed; action + docs only.)
 
-- **This repository now follows its own recommendation — for real, not just in
-  prose.** The [seven-repositories case
-  study](docs/case-studies/2026-08-25-seven-repos.md) claimed the tool's own
-  `uv.lock` finding had been fixed with "one line in `.gitignore`"; measuring
-  again showed that line had never been committed, and the lockfile had grown
-  to **116,440 tokens — 51% of the entire tree** (226,143 tokens before any
-  cut, measured proposal 55%). `/uv.lock` is now actually ignored. The same
-  walk on the fixed tree reads 109,797 tokens with a 7.2% proposal; the README
-  hero table and the landing page carry the corrected figures, and the case
-  study gained a postscript stating plainly that its original claim was false.
-  A published number that a fresh clone cannot reproduce is exactly the
-  failure this tool exists to catch — it should never survive on its own
-  repository.
+- **Note:** the `/uv.lock` ignore fix (self-measurement repair) was already
+  shipped in v0.5.3 but its changelog entry was omitted there — it is not a
+  new change in 0.5.4.
+
+## [0.5.3] - 2026-08-26
 
 ## [0.5.2] - 2026-08-26
 

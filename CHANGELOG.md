@@ -31,6 +31,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- **The GitHub Action's budget gate now actually works.** The action's
+  "Fail on a large addition" step read `env.CONTEXTCOST_MAX_ADDED`, but that
+  variable was never set from any input — so the `if:` guard was always false
+  and the gate silently never ran, even when a consumer set a budget. The
+  action now declares a `max-added` input and wires it through, so
+  `with: { max-added: 1000000 }` fails the check when a PR adds more than a
+  million readable tokens. Documented in the README's "In a pull request"
+  section. (No CLI code changed; action + docs only.)
+
 - **This repository now follows its own recommendation — for real, not just in
   prose.** The [seven-repositories case
   study](docs/case-studies/2026-08-25-seven-repos.md) claimed the tool's own

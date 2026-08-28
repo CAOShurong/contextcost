@@ -459,6 +459,10 @@ jobs:
       pull-requests: write
     steps:
       - uses: CAOShurong/contextcost/action@main
+        with:
+          # optional: fail the check if the PR adds more than this many tokens
+          # to what an agent reads (e.g. 1000000)
+          max-added: 1000000
 ```
 
 Or run it by hand. The base can be a second checkout of the same repository —

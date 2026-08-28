@@ -18,6 +18,13 @@ inputs:
     description: "Ignore-input model: generic, cursor, aider or repomix."
     required: false
     default: "generic"
+  max-added:
+    description: >-
+      Optional token budget. The action fails if the PR adds more than this
+      many tokens to what an agent reads (e.g. 1000000). Leave unset to never
+      fail.
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -87,6 +94,8 @@ runs:
 
     - name: Fail on a large addition
       if: env.CONTEXTCOST_MAX_ADDED != ''
+      env:
+        CONTEXTCOST_MAX_ADDED: ${{ inputs.max-added }}
       run: |
         set -euo pipefail
         max=$(contextcost contextcost-head --delta contextcost-base --json \

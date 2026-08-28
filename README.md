@@ -11,8 +11,11 @@
   </a>
 </p>
 
-**What does it cost an AI agent to read your repository — and how much of
-that is waste it can prove?**
+## 3-second summary: Input → Output → Savings
+
+| **You give it** | **It gives you** | **Proven savings (measured, not guessed)** |
+|---|---|---|
+| `uvx contextcost .` (any repo, zero install) | Full token-cost breakdown + waste proposal | **plotly.js: 42% (26.8M tokens)** • **dask: 46.5% (2.0M tokens)** • **buildkit: 89.5%** |
 
 ```bash
 uvx contextcost .           # measure the repo you're standing in — nothing installed

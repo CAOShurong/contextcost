@@ -34,6 +34,16 @@ methodology is the moat; everything below strengthens or distributes it.
 
 ## P1 — distribution
 
+- [done 2026-08-29a] Profile freshness board: CAOShurong/CAOShurong README gained a
+      "各项目最近动态" section — one row per portfolio repo with its latest
+      release tag + date and the latest substantive commit (08-26/08-27
+      activity highlighted: benchlineage zero-install trial, contextcost hero
+      table, frontiertrials bulk-capture, vulnfuse doc-align fix). Maintenance
+      only commits are labelled honestly ("仅依赖维护") rather than padded.
+      Every cell is a real git-log extraction, not prose. Shipped as profile
+      commit ef7aa1a. Distribution reinforcement: the portfolio front page now
+      updates itself with evidence, not a static blurb.
+
 - [done 2026-08-26j] Release v0.5.3: the PyPI project page had fallen behind
       main. v0.5.2 was tagged *before* the 17-repo hero table (47bbb7c), the
       real `/uv.lock` ignore (9cbc2e1) and the ±23% recalibration (4bb6337)

@@ -9,6 +9,15 @@ Make contextcost the default answer to "what will this repo cost me in
 context, and what can I safely drop?" — the measure→propose→re-measure
 methodology is the moat; everything below strengthens or distributes it.
 
+- [done 2026-08-29b] GitHub Action budget gate fixed: the `Fail on a large
+      addition` step read `env.CONTEXTCOST_MAX_ADDED`, which no input ever set
+      — so its `if:` was always false and the gate silently never ran. Declared
+      a `max-added` input, wired it to the env the step checks, documented it
+      in the README's "In a pull request" section. The Action is the
+      install→market loop (every consumer that enables the gate advertises the
+      CLI on their own PRs), so a dead gate was a real distribution loss, not
+      a cosmetic bug. No CLI code touched; 203 tests green. Shipped a1ee3bf.
+
 ## P0 — credibility & correctness
 
 - [done rev 4] Estimator blind spot found by `--accurate` on plotly.js: numeric data

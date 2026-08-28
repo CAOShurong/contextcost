@@ -146,29 +146,7 @@ No dependencies. Python 3.9+. Also works with `pipx run contextcost .`.
 
 ## Why this exists
 
-Every coding agent — Claude Code, Cursor, Codex, Copilot Workspace, an
-in-house one — spends part of its context window just working out what is in
-your repository. That budget is finite and it is charged per token, and most
-repositories quietly spend a large fraction of it on files that often add
-little to an ordinary source-code task: lockfiles, minified bundles, vendored
-dependencies, snapshot fixtures, generated clients.
-
-The numbers are not hypothetical. Measured on full public checkouts with one
-command each (`uvx contextcost <repo>`):
-
-- **[plotly.js](https://github.com/plotly/plotly.js) — 42% waste (26.8M tokens).** 17.4M tokens of `dist/` build output plus 5.9M of minified bundles — an agent fixing a chart bug never reads any of it usefully.
-- **[dask](https://github.com/dask/dask) — 46.5% waste (2.0M tokens).** A single `pixi.lock` is 22% of the entire repo's context cost; 383K more in logo SVGs that are pure coordinate dumps.
-- **[astropy](https://github.com/astropy/astropy) — 2.7%.** A disciplined repo correctly comes back almost clean instead of being handed invented findings.
-
-The spread *is* the finding: there is no universal waste percentage, only your
-repository's number. The full table of [seven real repos](docs/case-studies/2026-08-25-seven-repos.md)
-and [ten more](docs/case-studies/2026-08-26-ten-more-repos.md) is reproducible
-from a single script.
-
-There are good tools for *packing* a repository into a prompt — repomix,
-gitingest, code2prompt, files-to-prompt. This is not one of them. Packing is a
-solved and crowded problem. Auditing what the packing will cost you, and
-reducing it with evidence, was not.
+Every coding agent (Claude Code, Cursor, Codex, Copilot) spends 20–45% of its context window on files that add no signal — measured on full public checkouts with `uvx contextcost <repo>`: **plotly.js wastes 42% (26.8M tokens, mostly dist/ bundles + numeric mock data)**, **dask wastes 46.5% (2.0M tokens, led by a single pixi.lock at 22% of the whole repo)**, while disciplined repos like **astropy come back at 2.7%**. The spread is the finding: there is no universal waste percentage, only your repository's number — and unlike packers (repomix, gitingest) that bundle blindly, contextcost *proves* the waste by re-measuring the repo with cuts applied, so every saving is observed, not guessed. Try it: `uvx contextcost .`
 
 ## What it will not do
 

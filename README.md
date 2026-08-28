@@ -15,7 +15,8 @@
 that is waste it can prove?**
 
 ```bash
-uvx contextcost <repo>     # any repo URL or local path — nothing installed
+uvx contextcost .           # measure the repo you're standing in — nothing installed
+uvx contextcost plotly.js   # or any repo by name or URL
 ```
 
 **In 3 seconds, on repos you already know:**
@@ -26,6 +27,8 @@ uvx contextcost <repo>     # any repo URL or local path — nothing installed
 | `dask/dask` | 4.3M tokens | **2.0M — 46.5%** |
 
 `uvx contextcost plotly.js` reports that **26.8M of its 63.8M tokens (42%) are build output, minified bundles and recorded test fixtures an agent never reads usefully.** The 42% isn't a guess — the tool re-walks the repository with its proposal applied and reports the *difference* between the two measurements. ([All 17 measured repos →](docs/case-studies/2026-08-25-seven-repos.md))
+
+**The differentiator in one line:** a packer just bundles your repo — contextcost *proves* what's waste by re-measuring the repo with the cuts applied, so the percentage is something it observed, not a guess. That is why every number above is reproducible with `bash docs/case-studies/reproduce.sh`.
 
 ## 17 real repositories, measured
 

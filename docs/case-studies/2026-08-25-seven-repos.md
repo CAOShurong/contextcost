@@ -119,10 +119,12 @@ observed" had published a claim about itself that a fresh clone would not
 reproduce.
 
 The line is committed now. The same measurement on the fixed tree:
-109,797 tokens to read this repository, proposal 101,946, saving 7,851 —
-**7.2%**. The README's hero table carries the corrected figure; this post's
+113,369 tokens to read this repository, proposal 104,803, saving 8,566 —
+**7.6%**. The README's hero table carries the corrected figure; this post's
 table above stays as first published, because rewriting a published result
-would be its own kind of dishonesty.
+would be its own kind of dishonesty. (The number shifted again as the repo
+grew — `docs/calibration-samples/` and `docs/index.html` are now flagged as
+waste. This is expected: a living repository's waste profile changes over time.)
 
 ---
 

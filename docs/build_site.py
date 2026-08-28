@@ -131,12 +131,15 @@ REPOS = [
     # under this edit (2026-08-26, after /uv.lock landed in .gitignore:
     # before the fix the same walk measured 226,143 tokens with a 55%
     # proposal -- the lockfile alone was 116,440 tokens, 51% of the repo).
+    # Re-measured 2026-08-29 after repo growth (docs/calibration-samples/,
+    # docs/index.html flagged): walk 113,369, proposal 104,803, saving 8,566,
+    # 7.6%. The tool correctly identifies new waste as the repo evolves.
     (
         "contextcost itself",
         "https://github.com/CAOShurong/contextcost",
-        109_797,
-        101_946,
-        7_851,
+        113_369,
+        104_803,
+        8_566,
     ),
 ]
 

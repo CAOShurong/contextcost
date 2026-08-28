@@ -51,7 +51,7 @@ guesses:
 | [rclone/rclone](https://github.com/rclone/rclone) | 7,889,210 | 1,719,408 | 21.8% |
 | [pandas-dev/pandas](https://github.com/pandas-dev/pandas) | 10,105,577 | 2,176,295 | 21.5% |
 | [keycloak/keycloak](https://github.com/keycloak/keycloak) | 18,687,556 | 1,397,219 | 7.5% |
-| [contextcost (this repo)](https://github.com/CAOShurong/contextcost) | 109,797 | 7,851 | 7.2% |
+| [contextcost (this repo)](https://github.com/CAOShurong/contextcost) | 113,369 | 8,566 | 7.6% |
 | [pydata/xarray](https://github.com/pydata/xarray) | 2,133,276 | 126,159 | 5.9% |
 | [restic/restic](https://github.com/restic/restic) | 1,054,989 | 49,807 | 4.7% |
 | [astropy/astropy](https://github.com/astropy/astropy) | 7,881,727 | 212,121 | 2.7% |

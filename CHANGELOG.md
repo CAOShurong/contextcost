@@ -18,6 +18,17 @@ All notable changes to this project are documented here. The format follows
   changed in this release; it exists so the distribution surface matches the
   evidence.
 
+## [Unreleased]
+
+### Documentation
+
+- **Beginner tutorial (`docs/tutorial.md`)** — the discoverability gap called
+  out in HONEST_ASSESSMENT ("no tutorial") is now closed with a 60-second
+  walkthrough from zero to a CI-guarded repo. Every number in it is real output
+  from running contextcost on this repository (113,512 → 104,946 tokens, 8%
+  saved, re-measured by a second walk). Linked from the README hero block and
+  the Install section.
+
 ## [0.5.4] - 2026-08-29
 
 ### Documentation

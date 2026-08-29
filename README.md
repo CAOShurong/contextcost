@@ -22,6 +22,10 @@ uvx contextcost .           # measure the repo you're standing in — nothing in
 uvx contextcost plotly.js   # or any repo by name or URL
 ```
 
+**New here?** Follow the [60-second tutorial](docs/tutorial.md) — run it, read
+the output, accept the cuts, and gate it in CI. Every number in it is real
+output from this repository.
+
 **In 3 seconds, on repos you already know:**
 
 | you point it at | it costs to read | waste it can prove (measured) |
@@ -146,6 +150,9 @@ pip install contextcost
 ```
 
 No dependencies. Python 3.9+. Also works with `pipx run contextcost .`.
+
+New to the tool? The [tutorial](docs/tutorial.md) walks from zero to a
+CI-guarded repo in six short steps, with real output at every stage.
 
 ## Why this exists
 

@@ -30,14 +30,14 @@ runs:
   using: "composite"
   steps:
     - name: Check out the merge base
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         ref: ${{ github.event.pull_request.base.sha }}
         path: contextcost-base
         fetch-depth: 0
 
     - name: Check out the PR head
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         path: contextcost-head
         # fetch-depth: 1 is enough; the base step already fetched history.
